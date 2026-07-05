@@ -12,47 +12,64 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// معالجة الإشعارات في الخلفية بكفاءة عالية
+// 1. الطريقة الرسمية من فايربيز
 messaging.setBackgroundMessageHandler(function(payload) {
-  const notificationTitle = payload.notification?.title || payload.data?.title || 'مسجد الرحمن';
+  const notificationTitle = payload.notification?.title || 'مسجد الرحمن';
   const notificationOptions = {
-    body: payload.notification?.body || payload.data?.body || 'لديك إشعار جديد',
+    body: payload.notification?.body || 'لديك إشعار جديد',
     icon: 'https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg',
     badge: 'https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg',
     vibrate: [200, 100, 200, 100, 200],
-    data: { url: '/' } // مسار فتح الموقع
+    data: { url: 'https://perstorp-moske.netlify.app/' },
+    requireInteraction: true // إجبار الإشعار على البقاء على الشاشة حتى يضغط عليه المستخدم
   };
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// الحدث الأهم: فتح الموقع تلقائياً عند قيام المستخدم بالضغط على الإشعار من شريط الإشعارات
+// 2. التقاط جذري (Fallback) في حال كان المتصفح نائماً تماماً وتجاهل فايربيز
+self.addEventListener('push', function(event) {
+  // إذا لم يوقظ فايربيز المتصفح، هذه الدالة ستوقظه بقوة النظام
+  if (event.data) {
+    const payload = event.data.json();
+    if (!payload.notification) { // لتجنب تكرار الإشعار
+      const title = payload.data?.title || 'مسجد الرحمن';
+      const options = {
+        body: payload.data?.body || 'لديك إشعار جديد',
+        icon: 'https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg',
+        badge: 'https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg',
+        vibrate: [200, 100, 200],
+        requireInteraction: true
+      };
+      event.waitUntil(self.registration.showNotification(title, options));
+    }
+  }
+});
+
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(windowClients) {
-      // إذا كان الموقع مفتوحاً بالفعل في الخلفية، قم بالتركيز عليه
       for (let i = 0; i < windowClients.length; i++) {
         const client = windowClients[i];
         if (client.url.includes(self.registration.scope) && 'focus' in client) {
           return client.focus();
         }
       }
-      // إذا كان مغلقاً تماماً، قم بفتحه
       if (clients.openWindow) {
-        return clients.openWindow('/');
+        return clients.openWindow('https://perstorp-moske.netlify.app/');
       }
     })
   );
 });
 
-const CACHE_NAME = 'arrahman-v1.1'; // تم تحديث رقم النسخة لإجبار المتصفحات على التحديث
+// 3. نظام الكاش (Offline Mode) للحفاظ على التطبيق حياً
+const CACHE_NAME = 'arrahman-v2.0';
 const ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/prayers.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
-  'https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;800&display=swap'
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
 self.addEventListener('install', (event) => {
@@ -62,18 +79,19 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.map(key => key !== CACHE_NAME ? caches.delete(key) : null))
-    ).then(() => self.clients.claim())
+    caches.keys().then(keys => Promise.all(
+      keys.map(key => {
+        if (key !== CACHE_NAME) return caches.delete(key);
+      })
+    )).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (event) => {
-  // استثناء طلبات قاعدة البيانات والصور من الكاش لمنع اللاج وتثقيل الموقع
-  if (event.request.url.includes('firestore') || 
-      event.request.url.includes('google') || 
-      event.request.url.includes('cloudinary')) {
+  if (event.request.method !== 'GET' || event.request.url.includes('firestore') || event.request.url.includes('google')) {
       return;
   }
-  event.respondWith(caches.match(event.request).then(res => res || fetch(event.request)));
+  event.respondWith(
+    fetch(event.request).catch(() => caches.match(event.request))
+  );
 });
