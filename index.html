@@ -922,7 +922,7 @@
         async function saveFCMToken() {
             if(!messaging || !('serviceWorker' in navigator)) return;
             try {
-                const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { updateViaCache: 'none' });
                 const token = await messaging.getToken({ vapidKey: publicVapidKey, serviceWorkerRegistration: reg });
                 if (token) {
                     const savedLocalToken = localStorage.getItem('savedFCMToken');
