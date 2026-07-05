@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.mosk_staden_perstorp.twa",
+        "sha256_cert_fingerprints": ["BC:12:CE:C1:6C:0E:E7:E4:B2:85:9B:A3:E0:7F:9C:CA:4B:E9:21:20:4F:3B:1E:7A:03:8C:04:B1:3F:2D:FA:01"]
+      }
+    }]
