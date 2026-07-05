@@ -36,21 +36,32 @@ async function sendNotification(title, body) {
     };
   }
 
+  // الـ Payload المطور والأقوى لإجبار الهواتف على الاستيقاظ والتسليم الفوري
   const messageBase = {
     notification: {
-      title,
-      body
+      title: title,
+      body: body
     },
     android: {
       priority: "high",
+      ttl: 0, // التسليم الفوري بدون أي تأجيل
       notification: {
-        sound: "default"
+        sound: "default",
+        clickAction: "https://perstorp-moske.netlify.app/"
       }
     },
     webpush: {
+      headers: {
+        Urgency: "high",
+        TTL: "0" // إيقاظ المتصفح وعرض الإشعار فوراً
+      },
       notification: {
         icon: "https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg",
-        badge: "https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg"
+        badge: "https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg",
+        vibrate: [200, 100, 200, 100, 200]
+      },
+      fcmOptions: {
+        link: "https://perstorp-moske.netlify.app/"
       }
     }
   };
@@ -67,6 +78,7 @@ async function sendNotification(title, body) {
     successCount += response.successCount;
     failureCount += response.failureCount;
 
+    // تنظيف قاعدة البيانات تلقائياً من التوكنز التالفة لمنع تراكمها
     if (response.failureCount > 0) {
       const failedTokensToRemove = [];
       response.responses.forEach((resp, idx) => {
@@ -125,8 +137,7 @@ async function markSent(id) {
     .collection("notification_logs")
     .doc(id)
     .set({
-      sent: true,
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
+      timestamp: admin.firestore.FieldValue.serverTimestamp()
     });
 }
 
