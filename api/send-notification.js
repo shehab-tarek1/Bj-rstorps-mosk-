@@ -19,6 +19,7 @@ export default async function handler(req, res) {
       });
     }
 
+    // الإعدادات القوية للإرسال الفوري لـ الإشعار التجريبي
     const messageBase = {
       notification: {
         title: "🕌 الرحمن",
@@ -26,17 +27,24 @@ export default async function handler(req, res) {
       },
       android: {
         priority: "high",
+        ttl: 0, // الإرسال الآن فوراً ومنع الهاتف من وضعه في الانتظار
         notification: {
-          sound: "default"
+          sound: "default",
+          clickAction: "https://perstorp-moske.netlify.app/"
         }
       },
       webpush: {
+        headers: {
+          Urgency: "high",
+          TTL: "0" // إجبار المتصفح على الاستيقاظ الفوري
+        },
         notification: {
           icon: "https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg",
-          badge: "https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg"
+          badge: "https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg",
+          vibrate: [200, 100, 200, 100, 200]
         },
-        headers: {
-          Urgency: "high"
+        fcmOptions: {
+          link: "https://perstorp-moske.netlify.app/"
         }
       }
     };
