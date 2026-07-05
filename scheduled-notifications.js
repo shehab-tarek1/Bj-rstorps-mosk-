@@ -36,7 +36,7 @@ async function sendNotification(title, body) {
     };
   }
 
-  const response = await admin.messaging().sendEachForMulticast({
+  const messageBase = {
     notification: {
       title,
       body
@@ -52,14 +52,50 @@ async function sendNotification(title, body) {
         icon: "https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg",
         badge: "https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg"
       }
-    },
-    tokens
-  });
+    }
+  };
+
+  let successCount = 0;
+  let failureCount = 0;
+  const chunkSize = 500;
+
+  for (let i = 0; i < tokens.length; i += chunkSize) {
+    const tokensChunk = tokens.slice(i, i + chunkSize);
+    const message = { ...messageBase, tokens: tokensChunk };
+
+    const response = await admin.messaging().sendEachForMulticast(message);
+    successCount += response.successCount;
+    failureCount += response.failureCount;
+
+    if (response.failureCount > 0) {
+      const failedTokensToRemove = [];
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          const errCode = resp.error?.code;
+          if (
+            errCode === "messaging/invalid-registration-token" ||
+            errCode === "messaging/registration-token-not-registered"
+          ) {
+            failedTokensToRemove.push(tokensChunk[idx]);
+          }
+        }
+      });
+
+      if (failedTokensToRemove.length > 0) {
+        const batch = db.batch();
+        failedTokensToRemove.forEach((badToken) => {
+          const docRef = db.collection("users_tokens").doc(badToken);
+          batch.delete(docRef);
+        });
+        await batch.commit().catch(e => console.error("Error deleting bad tokens", e));
+      }
+    }
+  }
 
   return {
-    success: response.successCount > 0,
-    sent: response.successCount,
-    failed: response.failureCount
+    success: successCount > 0,
+    sent: successCount,
+    failed: failureCount
   };
 }
 
@@ -253,4 +289,3 @@ export default async function handler(req, res) {
 
   }
 }
-
