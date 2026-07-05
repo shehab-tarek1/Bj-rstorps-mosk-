@@ -19,38 +19,69 @@ export default async function handler(req, res) {
       });
     }
 
-  const message = {
-  tokens,
+    const messageBase = {
+      notification: {
+        title: "🕌 الرحمن",
+        body: "هذا إشعار تجريبي"
+      },
+      android: {
+        priority: "high",
+        notification: {
+          sound: "default"
+        }
+      },
+      webpush: {
+        notification: {
+          icon: "https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg",
+          badge: "https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg"
+        },
+        headers: {
+          Urgency: "high"
+        }
+      }
+    };
 
-  notification: {
-    title: "🕌 الرحمن",
-    body: "هذا إشعار تجريبي"
-  },
+    let successCount = 0;
+    let failureCount = 0;
+    const chunkSize = 500;
 
-  android: {
-    priority: "high",
-    notification: {
-      sound: "default"
+    for (let i = 0; i < tokens.length; i += chunkSize) {
+      const tokensChunk = tokens.slice(i, i + chunkSize);
+      const message = { ...messageBase, tokens: tokensChunk };
+
+      const response = await admin.messaging().sendEachForMulticast(message);
+      successCount += response.successCount;
+      failureCount += response.failureCount;
+
+      if (response.failureCount > 0) {
+        const failedTokensToRemove = [];
+        response.responses.forEach((resp, idx) => {
+          if (!resp.success) {
+            const errCode = resp.error?.code;
+            if (
+              errCode === "messaging/invalid-registration-token" ||
+              errCode === "messaging/registration-token-not-registered"
+            ) {
+              failedTokensToRemove.push(tokensChunk[idx]);
+            }
+          }
+        });
+
+        if (failedTokensToRemove.length > 0) {
+          const batch = db.batch();
+          failedTokensToRemove.forEach((badToken) => {
+            const docRef = db.collection("users_tokens").doc(badToken);
+            batch.delete(docRef);
+          });
+          await batch.commit().catch(e => console.error("Error deleting bad tokens", e));
+        }
+      }
     }
-  },
-
-  webpush: {
-    notification: {
-      icon: "https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg",
-      badge: "https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg"
-    },
-    headers: {
-      Urgency: "high"
-    }
-  }
-};   
-
-    const response = await admin.messaging().sendEachForMulticast(message);
 
     return res.status(200).json({
       success: true,
-      sent: response.successCount,
-      failed: response.failureCount
+      sent: successCount,
+      failed: failureCount
     });
 
   } catch (error) {
