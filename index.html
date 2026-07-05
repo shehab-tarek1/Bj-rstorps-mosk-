@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="sv" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moské Ar-Rahman | مسجد الرحمن</title>
+
+    <meta name="description" content="Moské Ar-Rahman i Perstorp - Bönetider, Islamiska aktiviteter, Koranlektioner för barn och vuxna i Sverige">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:title" content="Moské Ar-Rahman | مسجد الرحمن">
+    <meta property="og:description" content="Välkommen till Allahs hus i Perstorp, Sverige">
+    <meta property="og:image" content="https://res.cloudinary.com/dsxrjmcxs/image/upload/c_limit,w_1000,q_auto,f_auto/v1777669774/cufyfeqolg9b0lbx1nyd.jpg">
+    <meta property="og:type" content="website">
+
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0a3622">
+    <link rel="apple-touch-icon" href="https://res.cloudinary.com/dsxrjmcxs/image/upload/c_limit,w_1000,q_auto,f_auto/v1777669774/cufyfeqolg9b0lbx1nyd.jpg">
+
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+
+    <!-- HTML2Canvas لحفظ الجدول كصورة -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- ملف مواقيت الصلاة -->
+    <script src="prayers.js"></script>
+
+    <style>
+        :root {
+            --primary: #0a3622;
+            --secondary: #d4af37;
+            --light-bg: #f8f9fa;
+            --white: #ffffff;
+            --text-dark: #2c3e50;
+            --text-muted: #6c7a89;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --shadow: 0 4px 15px rgba(0,0,0,0.05);
+            --transition: all 0.1s ease-out; 
+        }
+
+        html { scroll-behavior: smooth; }
+        .no-transition, .no-transition * { transition: none !important; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--light-bg); color: var(--text-dark); overflow-x: hidden; }
+
+        /* توافق الأحجام بين اللغتين لمنع الاهتزاز */
+        body.lang-ar { font-family: 'Cairo', sans-serif; font-size: 0.95rem; }
+        body.lang-ar h1, body.lang-ar h2, body.lang-ar h3 { font-family: 'Amiri', serif; }
+        body.lang-ar .header-brand { font-size: 1.05rem; }
+        body.lang-ar .hero-title { font-size: 1.8rem; }
+        body.lang-ar .hero-subtitle { font-size: 1rem; }
+        body.lang-ar .section-title { font-size: 1.6rem; }
+        body.lang-ar .timer-title { font-size: 0.85rem; }
+        body.lang-ar .countdown-clock { font-size: 1.6rem; }
+        body.lang-ar .prayer-name { font-size: 0.9rem; }
+        body.lang-ar .prayer-time { font-size: 0.8rem; }
+        body.lang-ar .activity-title { font-size: 1rem; }
+        body.lang-ar .activity-desc { font-size: 0.85rem; line-height: 1.5; }
+        body.lang-ar .clock-number { font-size: 1rem; }
+        body.lang-ar .lux-date { font-size: 0.85rem; }
+        body.lang-ar .menu-links a, body.lang-ar .menu-links button { font-size: 0.95rem; }
+        body.lang-ar .btn, body.lang-ar .donate-btn-modern { font-size: 0.9rem; }
+        body.lang-ar .city-badge { font-size: 0.85rem; padding: 2px 10px; }
+
+        /* تعديل الهيدر العلوي بحيث لا يترك مساحات جانبية كبيرة */
+        header {
+            position: fixed; top: 0; width: 100%; z-index: 1000; height: 65px;
+            background: rgba(10, 54, 34, 0.98); 
+            padding: 0 10px; display: flex; justify-content: space-between; align-items: center;
+            color: var(--secondary); box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .header-brand { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: bold; white-space: nowrap; }
+        .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
+        .icon-btn { cursor: pointer; font-size: 20px; transition: var(--transition); }
+        .icon-btn:hover { color: var(--white); }
+
+        .bell-container { position: relative; }
+        .notif-dot { position: absolute; top: 0; right: -2px; width: 10px; height: 10px; background-color: #ff3b30; border-radius: 50%; display: none; border: 2px solid rgba(10, 54, 34, 0.95); }
+        .notif-dot.active { display: block; }
+
+        .notif-box {
+            position: absolute; top: 50px; left: auto; right: 0; width: 300px; background: var(--white);
+            border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); opacity: 0; visibility: hidden;
+            transform: translateY(-5px); transition: opacity 0.1s, transform 0.1s; z-index: 1001;
+            display: flex; flex-direction: column; overflow: hidden;
+        }[dir="rtl"] .notif-box { left: 0; right: auto; }
+        .notif-box.show { opacity: 1; visibility: visible; transform: translateY(0); }
+        .notif-header { background: var(--primary); color: var(--secondary); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 0.95rem; }
+        .notif-body { max-height: 350px; overflow-y: auto; }
+        .notif-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; gap: 10px; color: var(--text-dark); }
+        .notif-item.prayer-alert { background: #f4fdf8; border-left: 3px solid var(--secondary); border-bottom: 2px solid var(--secondary); }[dir="rtl"] .notif-item.prayer-alert { border-left: none; border-right: 3px solid var(--secondary); }
+
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1001;
+            opacity: 0; visibility: hidden; transition: opacity 0.2s ease;
+        }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+        .sidebar {
+            position: fixed; top: 0; left: 0; right: auto; width: 220px; height: 100vh;
+            background: var(--white); box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transform: translateX(-100%); transition: transform 0.2s ease;
+            z-index: 1002; display: flex; flex-direction: column;
+        }[dir="rtl"] .sidebar { left: auto; right: 0; transform: translateX(100%); box-shadow: -2px 0 10px rgba(0,0,0,0.1); }
+        .sidebar.active { transform: translateX(0); }
+
+        .sidebar-header { padding: 15px; background: var(--primary); color: var(--secondary); display: flex; justify-content: space-between; align-items: center; }
+        .menu-links { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .menu-links a, .menu-links button { text-decoration: none; color: var(--text-dark); font-size: 1rem; font-weight: 600; padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; text-align: left; font-family: inherit; width: 100%; transition: background 0.1s;}
+        [dir="rtl"] .menu-links a,[dir="rtl"] .menu-links button { text-align: right; }
+        .menu-links a:hover, .menu-links button:hover { background: var(--light-bg); color: var(--primary); }
+
+        .btn-notif-active { color: var(--success) !important; background: rgba(39, 174, 96, 0.1) !important; border: 1px solid rgba(39, 174, 96, 0.2) !important; }
+
+        .hero {
+            position: relative; padding-top: 65px; min-height: 350px; height: auto;
+            background-image: url('https://res.cloudinary.com/dsxrjmcxs/image/upload/c_limit,w_1100,q_auto,f_auto/v1777669774/cufyfeqolg9b0lbx1nyd.jpg');
+            background-position: center center; background-size: cover; background-repeat: no-repeat;
+            display: flex; align-items: center; justify-content: center; text-align: center; padding-bottom: 50px;
+        }
+        .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,54,34,0.4), rgba(10,54,34,0.8)); }
+        .hero-content { position: relative; z-index: 1; color: var(--white); padding: 0 20px; width: 100%; max-width: 800px; animation: fadeInUp 0.4s ease-out forwards; }
+        .hero-title { font-size: 2rem; color: var(--secondary); margin-bottom: 5px; text-shadow: 2px 2px 5px rgba(0,0,0,0.8); word-break: break-word; letter-spacing: 0.5px;}
+        .hero-subtitle { font-size: 1.1rem; margin-bottom: 10px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); line-height: 1.5; }
+
+        .section { padding: 40px 5%; max-width: 1200px; margin: 0 auto; position: relative;}
+        .section-header { text-align: center; margin-bottom: 25px; }
+        .title-row { display: flex; justify-content: center; align-items: baseline; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+        .section-title { font-size: 1.8rem; color: var(--primary); margin: 0; word-break: break-word; }
+        .city-badge { font-size: 0.85rem; color: var(--white); background: var(--secondary); padding: 2px 10px; border-radius: 20px; font-weight: bold; font-family: inherit; }
+        .title-separator { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .title-separator::before, .title-separator::after { content: ''; height: 2px; width: 40px; background: linear-gradient(to right, transparent, var(--secondary), transparent); border-radius: 2px; }
+        .title-separator i { color: var(--primary); font-size: 1rem; }
+
+        .timer-container { text-align: center; margin-bottom: 25px; background: var(--white); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); border-bottom: 3px solid var(--secondary); width: fit-content; min-width: 200px; max-width: 90%; margin-left: auto; margin-right: auto; }
+        .timer-title { font-size: 0.9rem; color: var(--text-dark); margin-bottom: 5px; font-weight: bold; }
+        .countdown-clock { font-size: 1.6rem; font-weight: bold; color: var(--primary); font-family: monospace; letter-spacing: 2px; direction: ltr; }
+
+        .prayer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+        .prayer-card { background: var(--white); border-radius: 10px; padding: 10px; text-align: center; box-shadow: var(--shadow); border-bottom: 3px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: center;}
+        .prayer-card.next-prayer { background: var(--primary); color: var(--white); border-bottom-color: var(--secondary); }
+        .prayer-icon { font-size: 20px; color: var(--secondary); margin-bottom: 5px; }
+        .prayer-name { font-size: 0.95rem; font-weight: bold; margin-bottom: 2px; }
+        .prayer-time { font-size: 0.85rem; color: #666; }
+        .prayer-card.next-prayer .prayer-time { color: #ddd; }
+
+        .stats-bar { display: flex; justify-content: center; gap: 20px; padding: 15px; margin: -10px auto 20px auto; max-width: 600px; background: var(--white); border-radius: 12px; box-shadow: var(--shadow); flex-wrap: wrap; border: 1px solid rgba(10,54,34,0.1); }
+        .stat-item { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 120px; }
+        .stat-item:not(:last-child) { border-right: 2px solid var(--light-bg); }[dir="rtl"] .stat-item:not(:last-child) { border-right: none; border-left: 2px solid var(--light-bg); }
+        .stat-number { font-size: 1.5rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; font-family: monospace; }
+        .stat-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-top: 5px; }
+
+        .active-icon-wrapper { position: relative; display: inline-flex; }
+        .pulse-dot { position: absolute; top: -3px; right: -5px; width: 10px; height: 10px; background-color: var(--success); border-radius: 50%; box-shadow: 0 0 0 rgba(39, 174, 96, 0.4); animation: pulse 1.5s infinite; border: 2px solid var(--white); }[dir="rtl"] .pulse-dot { right: auto; left: -5px; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(39, 174, 96, 0); } 100% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); } }
+
+        @keyframes popUpdate { 0% { transform: scale(1); } 50% { transform: scale(1.3); color: var(--success); } 100% { transform: scale(1); } }
+        .pop-update { animation: popUpdate 0.4s ease-out forwards; display: inline-block; }
+
+        .btn-monthly-wrapper { text-align: center; margin-bottom: 30px; }
+        .btn-monthly { background: linear-gradient(135deg, var(--primary), #0c4a2e); color: var(--white); border: 1px solid var(--secondary); padding: 10px 25px; border-radius: 30px; font-size: 1rem; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: transform 0.2s; font-family: inherit; }
+        .btn-monthly:active { transform: scale(0.95); }
+
+        .timetable-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; opacity: 0; transition: opacity 0.3s; }
+        .timetable-backdrop.active { display: block; opacity: 1; }
+
+        .timetable-wrapper { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -45%); width: 95%; max-width: 600px; max-height: 85vh; background: var(--white); border-radius: 15px; z-index: 2001; box-shadow: 0 10px 30px rgba(0,0,0,0.3); opacity: 0; transition: all 0.3s ease; flex-direction: column; overflow: hidden;}
+        .timetable-wrapper.active { display: flex; transform: translate(-50%, -50%); opacity: 1; }
+
+        .timetable-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--primary); color: var(--secondary); }
+        .timetable-header h3 { margin: 0; font-size: 1.2rem; }
+        .timetable-body { padding: 15px; overflow-y: auto; background: var(--light-bg); }
+        .timetable-footer { padding: 15px; background: var(--white); display: flex; gap: 10px; border-top: 1px solid #eee; }
+        .timetable-footer .btn { flex: 1; justify-content: center; padding: 10px; font-size: 0.95rem; }
+
+        .pray-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: center; background: var(--white); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .pray-table th { background: var(--primary); color: var(--secondary); padding: 10px 5px; position: sticky; top: 0; z-index: 10; font-weight: bold; border-bottom: 2px solid var(--secondary); }
+        .pray-table td { padding: 8px 5px; border-bottom: 1px solid #eee; color: var(--text-dark); font-family: monospace; font-size: 0.9rem;}
+        .pray-table tr:nth-child(even) { background-color: #fcfcfc; }
+        .pray-table tr.today-row { background-color: rgba(212, 175, 55, 0.15); font-weight: bold; border-left: 3px solid var(--secondary); border-right: 3px solid var(--secondary); }
+
+        .activities-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+        .activity-card { background: var(--white); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+        .activity-img { width: 100%; height: 140px; object-fit: cover; }
+        .activity-content { padding: 12px; }
+        .activity-title { font-size: 1.05rem; color: var(--primary); margin-bottom: 5px; font-weight: bold; }
+        .activity-desc { color: #666; font-size: 0.9rem; max-height: 80px; overflow-y: auto; padding-right: 5px; white-space: pre-wrap; line-height: 1.4; }
+
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        .gallery-item { position: relative; border-radius: 8px; overflow: hidden; height: 140px; box-shadow: var(--shadow); cursor: pointer; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+        .gallery-item:hover img { transform: scale(1.05); }
+        .gallery-caption { position: absolute; bottom: 0; left: 0; width: 100%; padding: 5px; background: rgba(0,0,0,0.7); color: var(--white); text-align: center; font-size: 0.8rem; opacity: 0; transition: opacity 0.2s;}
+        .gallery-item:hover .gallery-caption { opacity: 1; }
+
+        .lightbox-overlay { display: none; position: fixed; z-index: 5000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+        .lightbox-overlay.active { display: flex; opacity: 1; }
+        .lightbox-content { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 25px rgba(0,0,0,0.5); object-fit: contain; }
+        .lightbox-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 5001; transition: color 0.2s; }
+        .lightbox-close:hover { color: var(--secondary); }
+        [dir="rtl"] .lightbox-close { right: auto; left: 30px; }
+
+        .donation-wrap { background: linear-gradient(145deg, #ffffff, #f4fdf8); border-radius: 15px; padding: 25px 15px; box-shadow: var(--shadow); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-evenly; gap: 15px; border: 1px solid rgba(212, 175, 55, 0.2); }
+        .donation-info { text-align: center; max-width: 400px; }
+        .donation-info p { font-size: 0.95rem; color: #555; margin-bottom: 10px; line-height: 1.4; }
+        .swish-number { font-size: 1.3rem; font-weight: 800; color: var(--primary); letter-spacing: 1px; padding: 5px 15px; background: var(--white); border-radius: 8px; margin: 5px 0; border: 2px dashed var(--secondary); display: inline-block; }
+        .donate-btn-modern { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, var(--secondary), #b8962e); color: var(--white); padding: 8px 20px; border-radius: 30px; font-size: 0.95rem; font-weight: bold; text-decoration: none; margin-top: 10px; }
+
+        .contact-card { background: linear-gradient(135deg, var(--primary), #052014); color: var(--white); border-radius: 15px; padding: 30px 15px; text-align: center; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+        .contact-avatar { width: 70px; height: 70px; background: var(--secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); margin: 0 auto 10px auto; border: 3px solid var(--white); }
+        .social-btns { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .btn { padding: 8px 15px; border-radius: 30px; border: none; text-decoration: none; color: var(--white); font-weight: bold; display: inline-flex; align-items: center; gap: 5px; font-size: 0.9rem; cursor: pointer; }
+        .btn-wa { background: #25D366; } .btn-fb { background: #1877F2; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 3000; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: var(--white); padding: 20px; border-radius: 12px; width: 85%; max-width: 300px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); animation: popIn 0.15s ease-out forwards; }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-actions { display: flex; gap: 8px; margin-top: 15px; }
+        .modal-actions .btn { flex: 1; padding: 8px; justify-content: center; font-size: 0.9rem;}
+        .btn-cancel { background: #e0e6ed; color: var(--text-dark); }
+        .btn-confirm { background: var(--primary); }
+        .btn-danger { background: var(--danger); }
+
+        .app-toast-container { position: fixed; top: 80px; left: 50%; transform: translate(-50%, -20px); background: linear-gradient(135deg, var(--primary), #0c4a2e); color: var(--white); padding: 10px 20px; border-radius: 30px; display: flex; align-items: center; gap: 10px; opacity: 0; visibility: hidden; transition: opacity 0.2s, transform 0.2s; z-index: 10000; border: 1px solid var(--secondary); text-align: center; max-width: 90%; font-size: 1rem; font-family: inherit; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .app-toast-container.show { transform: translate(-50%, 0); opacity: 1; visibility: visible; }
+
+        .fade-in { opacity: 0; transform: translateY(10px); transition: opacity 0.2s ease, transform 0.2s ease; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        .clock-section { display: flex; justify-content: center; align-items: center; margin-top: -30px; position: relative; z-index: 10; padding: 0 20px; margin-bottom: 10px; }
+        .lux-clock-wrapper { background: linear-gradient(145deg, #0a3622, #052014); border: 2px solid var(--secondary); border-radius: 20px; padding: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); text-align: center; color: var(--white); display: flex; flex-direction: column; align-items: center; }
+        .analog-clock { width: 140px; height: 140px; border: 3px solid var(--secondary); border-radius: 50%; margin-bottom: 8px; position: relative; background: radial-gradient(circle, #0a3622 0%, #03120b 100%); box-sizing: border-box; }
+        .clock-face { width: 100%; height: 100%; position: relative; }
+        .tick { position: absolute; top: 4px; left: 50%; width: 2px; height: 5px; background: rgba(212, 175, 55, 0.5); transform-origin: 50% 63px; margin-left: -1px; z-index: 1; }
+        .tick.hour-tick { width: 3px; height: 8px; background: var(--secondary); margin-left: -1.5px; transform-origin: 50% 63px; }
+        .clock-number { position: absolute; font-family: 'Amiri', serif; font-size: 1rem; font-weight: bold; color: var(--secondary); transform: translate(-50%, -50%); z-index: 2; }
+        .num-12 { top: 18px; left: 50%; } .num-3 { top: 50%; left: calc(100% - 18px); } .num-6 { top: calc(100% - 18px); left: 50%; } .num-9 { top: 50%; left: 18px; }
+        .hand { position: absolute; bottom: 50%; transform-origin: bottom center; border-radius: 10px; z-index: 3; }
+        .hour-hand { width: 4px; height: 35px; background: var(--white); left: calc(50% - 2px); }
+        .minute-hand { width: 3px; height: 50px; background: var(--secondary); left: calc(50% - 1.5px); }
+        .second-hand { width: 2px; height: 60px; background: #ff3b30; left: calc(50% - 1px); z-index: 4; }
+        .center-dot { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: var(--secondary); border-radius: 50%; transform: translate(-50%, -50%); z-index: 5; }
+        .lux-date { font-size: 0.9rem; color: #e0e0e0; font-weight: 600; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 8px; }
+
+        /* =========================================
+           TV Display Mode Styles (وضع شاشة العرض)
+           ========================================= */
+        .tv-mode-overlay {
+            display: none; position: fixed; inset: 0; z-index: 99999;
+            background-color: #000; color: #fff; font-family: 'Cairo', sans-serif;
+            overflow: hidden; direction: rtl !important; /* إجبار الاتجاه لليمين دائماً */
+        }
+        .tv-mode-overlay.active { 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            overflow: hidden;
+        }
+
+        .tv-exit-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 100000;
+            background: rgba(0,0,0,0.5); color: #fff; border: 2px solid #fff;
+            padding: 10px 15px; border-radius: 8px; font-size: 1.2rem; cursor: pointer;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .tv-mode-overlay:hover .tv-exit-btn { opacity: 1; }
+
+        /* Layout for TV Mode */
+        .tv-layout { 
+            display: flex; 
+            flex-direction: row-reverse; 
+            width: 100vw; 
+            flex: 1; 
+            overflow: hidden; 
+        }
+
+        /* الشريط الجانبي (مواقيت الصلاة) - على اليسار بصرياً بسبب row-reverse */
+        .tv-sidebar {
+            width: 28%; background: linear-gradient(to bottom, #004b87, #002b5e);
+            display: flex; flex-direction: column; border-right: 3px solid #d4af37;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.5); z-index: 2;
+            padding-bottom: 5px; /* تقليل المساحة السفلية لضمان عدم تداخل العشاء مع الشريط */
+            position: relative;
+        }
+
+        /* صف الصلاة - ضبط التمدد لعدم اختفاء صلاة العشاء */
+        .tv-prayer-row {
+            flex: 1; min-height: 0; display: flex; flex-direction: row; align-items: center; 
+            padding: 0 15px 0 25px; border-bottom: 1px solid rgba(255,255,255,0.1); 
+            direction: ltr; justify-content: flex-start; gap: 15px;
+        }
+        .tv-prayer-row.active { background: rgba(255, 255, 255, 0.1); border-left: 8px solid #d4af37; padding-left: 17px; border-right: none; }
+        .tv-prayer-icon { font-size: min(3vw, 3.5vh); color: #fff; }
+        .tv-prayer-details { display: flex; flex-direction: column; align-items: center; text-align: center; direction: rtl; }
+        .tv-prayer-name { font-size: min(1.8vw, 2.5vh); font-weight: bold; color: #e0e0e0; margin-bottom: 2px; }
+        .tv-prayer-time { font-size: min(3.5vw, 3.5vh); font-weight: 900; color: #fff; line-height: 1; font-family: monospace; letter-spacing: 2px; direction: ltr; }
+        .tv-prayer-iqama { font-size: min(1vw, 1.5vh); color: #fff; background: rgba(0,0,0,0.4); padding: 3px 10px; border-radius: 10px; display: inline-block; margin-top: 6px; }
+
+        /* المنطقة الرئيسية (الخلفية والساعة) - على اليمين بصرياً */
+        .tv-main {
+            width: 72%; position: relative;
+            background-image: url('https://res.cloudinary.com/dsxrjmcxs/image/upload/c_limit,w_1000,q_auto,f_auto/v1777669774/cufyfeqolg9b0lbx1nyd.jpg');
+            background-size: cover; background-position: center;
+        }
+        .tv-main-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.2); }
+
+        /* الهيدر العلوي */
+        .tv-header {
+            position: absolute; top: 0; left: 0; right: 0; padding: 30px 40px;
+            display: flex; justify-content: space-between; align-items: flex-start; z-index: 3;
+            flex-direction: row; /* في وضع RTL يضع العنصر الأول أقصى اليمين */
+        }
+        .tv-mosque-info { 
+            display: flex; flex-direction: column; align-items: flex-start; /* اليمين في وضع RTL */
+            text-align: right; gap: 5px; 
+        }
+        .tv-mosque-logo { font-size: 3.5vw; color: #fff; text-shadow: 2px 2px 4px #000; margin-bottom: 5px;}
+        .tv-mosque-info h1 { font-size: 2.5vw; font-family: 'Amiri', serif; color: #d4af37; text-shadow: 2px 2px 4px #000; margin: 0; line-height: 1.2; }
+        .tv-mosque-info p { font-size: 1.2vw; color: #fff; text-shadow: 1px 1px 2px #000; margin: 0; }
+        
+        .tv-date-bar { 
+            background: rgba(0, 75, 135, 0.8); padding: 10px 25px; border-radius: 20px; 
+            font-size: min(1.2vw, 2vh); font-weight: bold; border: 1px solid #d4af37; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; 
+            gap: 10px; white-space: nowrap; /* إبقاء المستطيل سطراً واحداً دائماً */
+        }
+
+        /* الساعة الأنالوج الزرقاء */
+        .tv-clock-wrapper {
+            position: absolute; top: 50%; left: 8%; /* تحريك الساعة لليمين لتبتعد عن الرموز */
+            transform: translate(-50%, -50%); z-index: 10;
+        }
+        .tv-analog-clock {
+            width: 28vw; height: 28vw; 
+            max-width: 55vh; max-height: 55vh; 
+            min-width: 250px; min-height: 250px;
+            aspect-ratio: 1 / 1; /* إجبار الساعة على أن تكون دائرية 100% */
+            border: 12px solid #002b5e; border-radius: 50%;
+            background: radial-gradient(circle, #00509e 0%, #002b5e 100%);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7), inset 0 0 30px rgba(0,0,0,0.8);
+            position: relative;
+        }
+        .tv-clock-face { width: 100%; height: 100%; position: relative; }
+        .tv-clock-number {
+            position: absolute; font-size: 2vw; font-weight: bold; color: #fff;
+            transform: translate(-50%, -50%); font-family: 'Amiri', serif; text-shadow: 2px 2px 4px #000;
+        }
+        .tv-hand { position: absolute; bottom: 50%; transform-origin: bottom center; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .tv-hour-hand { width: 10px; height: 25%; background: #fff; left: calc(50% - 5px); }
+        .tv-minute-hand { width: 6px; height: 38%; background: #e0e0e0; left: calc(50% - 3px); }
+        .tv-second-hand { width: 3px; height: 45%; background: #ff3b30; left: calc(50% - 1.5px); }
+        .tv-center-dot { position: absolute; top: 50%; left: 50%; width: 24px; height: 24px; background: #ff3b30; border-radius: 50%; transform: translate(-50%, -50%); border: 4px solid #fff; z-index: 5; }
+        .tv-clock-brand { position: absolute; bottom: 25%; left: 50%; transform: translateX(-50%); text-align: center; color: #fff; opacity: 0.8; }
+        .tv-clock-brand div { font-size: 1vw; font-weight: bold; letter-spacing: 2px; }
+        .tv-clock-brand span { font-size: 0.7vw; }
+
+        /* منطقة العداد فوق الشريط الإخباري تصغير حجم العداد */
+        .tv-bottom-area {
+            position: absolute; bottom: 25px; /* مرفوعة فوق الشريط الإخباري بشكل ثابت */
+            left: 0; right: 0; z-index: 3;
+            display: flex; flex-direction: column; align-items: flex-start;
+        }
+        .tv-countdown-pill {
+            background: rgba(0, 75, 135, 0.9); border: 2px solid #fff; border-radius: 30px;
+            padding: 8px 25px; margin: 0 40px 0 0; display: flex; align-items: center; gap: 15px;
+            font-size: clamp(1rem, 1.5vw, 2rem); font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .tv-countdown-pill i { color: #d4af37; }
+
+        /* الشريط الإخباري السفلي (ممتد على كامل الشاشة بخلفية مقسومة لونين) */
+        .tv-ticker-wrapper {
+            position: relative; 
+            width: 100vw; height: 7vh; flex-shrink: 0; 
+            /* خلفية مقسومة: 28% لون القائمة الجانبية، والباقي أسود شفاف */
+            background: linear-gradient(to right, #002b5e 28%, rgba(0,0,0,0.8) 28%);
+            color: #fff; border-top: 3px solid #d4af37; 
+            display: flex; align-items: center; z-index: 100;
+        }
+        .tv-ticker-wrapper marquee { font-size: 1.8vw; padding: 0 20px; }
+    </style>
+</head>
+<body>
+    <script>
+        let currentLang = localStorage.getItem('lang') || 'sv';
+        document.documentElement.lang = currentLang;
+        document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+        if (currentLang === 'ar') document.body.classList.add('lang-ar');
+
+        let currentDayTracker = new Date().getDate();
+    </script>
+
+    <!-- حاوية وضع شاشة العرض (TV Mode) -->
+    <div id="tv-mode-overlay" class="tv-mode-overlay">
+        <button class="tv-exit-btn" onclick="exitTvMode()"><i class="fas fa-times"></i> خروج من شاشة العرض</button>
+
+        <div class="tv-layout">
+            <!-- الشريط الجانبي للمواقيت -->
+            <div class="tv-sidebar" id="tv-prayers-container">
+                <!-- سيتم توليد المواقيت هنا عبر الجافاسكربت -->
+            </div>
+
+            <!-- المنطقة الرئيسية -->
+            <div class="tv-main">
+                <div class="tv-main-overlay"></div>
+
+                <div class="tv-header">
+                    <!-- اسم المسجد والرمز في أقصى اليمين -->
+                    <div class="tv-mosque-info">
+                        <i class="fas fa-mosque tv-mosque-logo"></i>
+                        <h1>مسجد الرحمن</h1>
+                        <p>Perstorp skåne sverige</p>
+                    </div>
+                    <!-- شريط التاريخ سطر واحد -->
+                    <div class="tv-date-bar">
+                        <span id="tv-weather-display"><i class="fas fa-spinner fa-spin"></i></span> 
+                        <span style="color:#d4af37;">|</span> 
+                        <span id="tv-date-display">--</span>
+                    </div>
+                </div>
+
+                <div class="tv-clock-wrapper">
+                    <div class="tv-analog-clock">
+                        <div class="tv-clock-face" id="tv-clock-face">
+                            <!-- سيتم توليد الأرقام والعقارب عبر الجافاسكربت -->
+                            <div class="tv-hand tv-hour-hand" id="tv-hour-hand"></div>
+                            <div class="tv-hand tv-minute-hand" id="tv-minute-hand"></div>
+                            <div class="tv-hand tv-second-hand" id="tv-second-hand"></div>
+                            <div class="tv-center-dot"></div>
+                            <div class="tv-clock-brand">
+                                <div>MASAJID</div>
+                                <span>VERSION 2.0.4</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tv-bottom-area">
+                    <div class="tv-countdown-pill">
+                        <i class="fas fa-clock"></i>
+                        <span id="tv-countdown-text">--:--:--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الشريط الإخباري ممتد على كامل العرض بخلفية مقسومة لونين -->
+        <div class="tv-ticker-wrapper">
+            <marquee scrollamount="8" id="tv-ticker-text">مرحباً بكم في مسجد الرحمن - يرجى إغلاق الهواتف المحمولة أثناء الخطبة والصلاة - تقبل الله منا ومنكم صالح الأعمال</marquee>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-brand">
+            <i class="fas fa-bars icon-btn" onclick="toggleSidebar()"></i>
+            <i class="fas fa-mosque"></i>
+            <span id="nav-title">Moské Ar-Rahman</span>
+        </div>
+        <div class="header-actions">
+            <div class="icon-btn" onclick="toggleLanguage()" style="font-size: 12px; border: 1px solid var(--secondary); padding: 2px 6px; border-radius: 10px; font-weight:bold;">SV/AR</div>
+            <div class="bell-container">
+                <i class="fas fa-bell icon-btn" onclick="toggleNotifications()"></i>
+                <div class="notif-dot" id="notif-dot"></div>
+                <div class="notif-box" id="notif-box">
+                    <div class="notif-header">
+                        <span id="notif-title-text">Notiser</span>
+                        <i class="fas fa-times" style="cursor:pointer;" onclick="toggleNotifications()"></i>
+                    </div>
+                    <div class="notif-body" id="notif-body">
+                        <div id="dynamic-prayer-notif"></div>
+                        <div id="admin-notifs"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3 id="menu-title" style="font-size: 1.1em;">Meny</h3>
+            <i class="fas fa-times icon-btn" onclick="toggleSidebar()"></i>
+        </div>
+        <div class="menu-links">
+            <a href="#" onclick="toggleSidebar();"><i class="fas fa-home"></i> <span id="menu-home">Hem</span></a>
+            <a href="#prayers" onclick="toggleSidebar();"><i class="fas fa-clock"></i> <span id="menu-prayers">Bönetider</span></a>
+            <a href="#activities" onclick="toggleSidebar();"><i class="fas fa-users"></i> <span id="menu-activities">Aktiviteter</span></a>
+            <a href="#gallery" onclick="toggleSidebar();"><i class="fas fa-images"></i> <span id="menu-gallery">Galleri</span></a>
+
+            <!-- زر تفعيل شاشة العرض -->
+            <a href="#" onclick="enterTvMode(); toggleSidebar();"><i class="fas fa-tv"></i> <span id="menu-tv">شاشة العرض (TV)</span></a>
+
+            <button id="btn-toggle-notif" onclick="openNotificationModal()"><i id="menu-notif-icon" class="fas fa-bell"></i> <span id="menu-notif-btn">Aktivera Notiser</span></button>
+            <a href="admin.html"><i class="fas fa-cog"></i> <span id="menu-admin">Admin</span></a>
+        </div>
+    </div>
+
+    <!-- نافذة تأكيد الإشعارات -->
+    <div class="modal-overlay" id="notif-confirm-modal">
+        <div class="modal-content">
+            <i id="notif-modal-icon" class="fas fa-bell" style="font-size: 35px; color: var(--primary); margin-bottom: 10px;"></i>
+            <h3 id="notif-modal-title" style="color: var(--primary); margin-bottom: 5px;">تفعيل الإشعارات</h3>
+            <p id="notif-modal-msg" style="color: var(--text-muted); font-size: 0.9em; margin-bottom: 15px;">هل ترغب في التفعيل؟</p>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeNotifModal()" id="notif-btn-no">إلغاء</button>
+                <button class="btn btn-confirm" id="notif-btn-yes" onclick="confirmNotificationAction()">تأكيد</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- متصفح الصور الداخلي (Lightbox) -->
+    <div id="lightbox-modal" class="lightbox-overlay" onclick="closeLightbox(event)">
+        <span class="lightbox-close" onclick="closeLightbox(event)">&times;</span>
+        <img id="lightbox-img" class="lightbox-content" src="">
+    </div>
+
+    <div id="main-content">
+        <section class="hero">
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <h1 class="hero-title" id="hero-title">Moské Ar-Rahman</h1>
+                <p class="hero-subtitle" id="hero-subtitle">Välkommen till Allahs hus i Perstorp, Sverige</p>
+            </div>
+        </section>
+
+        <div class="clock-section fade-in">
+            <div class="lux-clock-wrapper">
+                <div class="analog-clock">
+                    <div class="clock-face" id="clock-face">
+                        <div class="clock-number num-12">12</div>
+                        <div class="clock-number num-3">3</div>
+                        <div class="clock-number num-6">6</div>
+                        <div class="clock-number num-9">9</div>
+                        <div class="hand hour-hand" id="hour-hand"></div>
+                        <div class="hand minute-hand" id="minute-hand"></div>
+                        <div class="hand second-hand" id="second-hand"></div>
+                        <div class="center-dot"></div>
+                    </div>
+                </div>
+                <div class="lux-date" id="lux-date">--</div>
+            </div>
+        </div>
+
+        <section class="section fade-in" id="prayers">
+            <div class="section-header">
+                <div class="title-row">
+                    <h2 class="section-title" id="title-prayer">Bönetider</h2>
+                    <span class="city-badge">Perstorp</span>
+                </div>
+                <div class="title-separator"><i class="fas fa-star-and-crescent"></i></div>
+            </div>
+            <div class="timer-container">
+                <div class="timer-title" id="timer-title">Tid kvar...</div>
+                <div class="countdown-clock" id="countdown-clock">00:00:00</div>
+            </div>
+            <div class="prayer-grid" id="prayer-container"></div>
+        </section>
+
+        <!-- شريط الإحصائيات -->
+        <div class="stats-bar fade-in">
+            <div class="stat-item">
+                <div class="stat-number">
+                    <i class="fas fa-users" style="font-size:1.3rem; color:var(--secondary);"></i> 
+                    <span id="count-total">...</span>
+                </div>
+                <div class="stat-label" id="label-total">إجمالي الزوار</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">
+                    <div class="active-icon-wrapper">
+                        <i class="fas fa-user" style="font-size:1.1rem; color:var(--success);"></i>
+                        <span class="pulse-dot"></span>
+                    </div>
+                    <span id="count-active">1</span>
+                </div>
+                <div class="stat-label" id="label-active">نشط الآن</div>
+            </div>
+        </div>
+
+        <!-- زر جدول المواقيت الشهري -->
+        <div class="btn-monthly-wrapper fade-in">
+            <button class="btn-monthly" id="btn-show-timetable" onclick="openTimetable()">
+                <i class="fas fa-calendar-alt"></i> <span id="text-btn-monthly">جدول مواقيت الصلاة الشهري</span>
+            </button>
+        </div>
+
+        <!-- حاوية الجدول الشهري -->
+        <div id="timetable-backdrop" class="timetable-backdrop" onclick="closeTimetable()"></div>
+        <div id="timetable-wrapper" class="timetable-wrapper">
+            <div class="timetable-header">
+                <h3 id="timetable-modal-title">جدول مواقيت الصلاة</h3>
+                <i class="fas fa-times" style="cursor:pointer; font-size:1.2rem;" onclick="closeTimetable()"></i>
+            </div>
+            <div class="timetable-body" id="capture-area">
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <h4 style="color: var(--primary); font-family: 'Amiri', serif; font-size: 1.3rem;" id="timetable-month-name">--</h4>
+                    <span class="city-badge" style="font-size: 0.75rem;">Perstorp</span>
+                </div>
+                <table class="pray-table" id="monthly-pray-table">
+                    <thead>
+                        <tr>
+                            <th id="th-day">اليوم</th>
+                            <th id="th-fajr">الفجر</th>
+                            <th id="th-dhuhr">الظهر</th>
+                            <th id="th-asr">العصر</th>
+                            <th id="th-maghrib">المغرب</th>
+                            <th id="th-isha">العشاء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timetable-tbody">
+                        <!-- يتم توليد البيانات هنا بواسطة JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="timetable-footer">
+                <button class="btn btn-cancel" id="btn-timetable-close" onclick="closeTimetable()" style="background: #e0e6ed; color: var(--text-dark);">إغلاق</button>
+                <button class="btn btn-confirm" id="btn-timetable-save" onclick="saveTimetableImage()" style="background: var(--primary);"><i class="fas fa-download"></i> حفظ كصورة</button>
+            </div>
+        </div>
+
+
+        <section class="section fade-in" id="activities" style="background: var(--white); padding-top: 20px;">
+            <div class="section-header">
+                <div class="title-row"><h2 class="section-title" id="title-activities">Aktiviteter</h2></div>
+                <div class="title-separator"><i class="fas fa-users"></i></div>
+            </div>
+            <div class="activities-grid" id="activities-container"></div>
+        </section>
+
+        <section class="section fade-in" id="gallery">
+            <div class="section-header">
+                <div class="title-row"><h2 class="section-title" id="title-gallery">Bildgalleri</h2></div>
+                <div class="title-separator"><i class="fas fa-camera"></i></div>
+            </div>
+            <div class="gallery-grid" id="gallery-container"></div>
+        </section>
+
+        <section class="section fade-in" id="donate">
+            <div class="section-header">
+                <div class="title-row"><h2 class="section-title" id="title-donate">Stöd Moskén</h2></div>
+                <div class="title-separator"><i class="fas fa-hand-holding-heart"></i></div>
+            </div>
+            <div class="donation-wrap">
+                <div class="donation-info">
+                    <div style="font-size: 20px; font-weight: 800; color: var(--text-dark); margin-bottom: 5px;"><i class="fas fa-mobile-alt" style="color: var(--primary);"></i> Swish</div>
+                    <p id="text-swish">Bidra till att stödja moskén och dess aktiviteter. Du kan enkelt och säkert donera via Swish-appen.</p>
+                    <div class="swish-number">123-297 15 47</div><br>
+                    <a href="https://app.swish.nu/1/p/sw/?sw=1232971547&amt=200&cur=SEK" class="donate-btn-modern" id="btn-donate">Klicka här för att donera <i class="fas fa-hand-holding-usd"></i></a>
+                </div>
+            </div>
+        </section>
+
+        <section class="section fade-in" id="contact" style="padding-bottom: 60px;">
+            <div class="contact-card">
+                <div class="contact-avatar"><i class="fas fa-user-tie"></i></div>
+                <h2 class="section-title" id="title-contact" style="color: var(--white);">Kontakta Admin</h2>
+                <div class="title-separator" style="margin-bottom: 15px;"><i class="fas fa-envelope" style="color: var(--secondary);"></i></div>
+                <p id="address-text" style="font-size: 0.85rem; margin: 10px 0; color: #eee; direction: ltr;">Islamiska kultur center Perstorp, Hantverkaregatan 1, 284 31 Perstorp</p>
+                <div class="social-btns">
+                    <a href="https://wa.me/46700371288" class="btn btn-wa"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                    <a href="https://www.facebook.com/share/1JBr9EDvWA/" class="btn btn-fb"><i class="fab fa-facebook-f"></i> Facebook</a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="app-toast-box" class="app-toast-container">
+        <i class="fas fa-bell" style="color: var(--secondary);"></i> 
+        <span id="toast-msg-text"></span>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLOQ3i-cyhZV-A1oN5Jhy_OQj_KdqClzk",
+            authDomain: "al-rahman-d0529.firebaseapp.com",
+            projectId: "al-rahman-d0529",
+            storageBucket: "al-rahman-d0529.firebasestorage.app",
+            messagingSenderId: "1081097400036",
+            appId: "1:1081097400036:web:a5b9ada478c9bdb7ae06f1"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth(); 
+
+        const publicVapidKey = "BOX0a8Dg181ZMjLic3risMEkJZio0hNHGIABg1Mym1qaSorpI6NcJ3QQ79WXg0qi6R1n4SXo-aib3WUkNcIII6E";
+
+        let messaging; 
+        try { if (firebase.messaging.isSupported()) messaging = firebase.messaging(); } catch (e) { }
+
+        let isNotifEnabled = localStorage.getItem('notifEnabled') === 'true';
+        let pendingNotifAction = ''; 
+
+        let siteData = { activities:[], gallery:[], notifications:[] };
+        let prayerTimes =[];
+
+        const langData = {
+            ar: { 
+                nav: "مسجد الرحمن", menuTitle: "القائمة", home: "الرئيسية", prayers: "مواقيت الصلاة", activities: "الأنشطة", gallery: "المعرض", admin: "الإدارة", heroTitle: "مسجد الرحمن", heroSub: "نرحب بكم في بيت الله في مدينة بيرستورب السويدية", tPrayer: "مواقيت الصلاة", tAct: "أنشطة المسجد", tDonate: "تبرع للمسجد", tSwish: "ساهم في دعم المسجد، تبرعك صدقة جارية.", btnDonate: "التبرع <i class='fas fa-hand-holding-usd'></i>", tGallery: "معرض الصور", tContact: "تواصل مع الإدارة", address: "Islamiska kultur center Perstorp, Hantverkaregatan 1, 284 31 Perstorp, السويد", 
+                prayerNames: { fajr: "الفجر", shurooq: "الشروق", dhuhr: "الظهر", asr: "العصر", maghrib: "المغرب", isha: "العشاء" }, pLabels: { adhan: "أذان:", iqama: "إقامة:", noP: "الشروق" }, timerTexts: { adhan: "باقي على أذان", iqama: "باقي على إقامة" }, notifTitle: "الإشعارات", notifBtnEnable: "تفعيل الإشعارات", notifBtnActive: "الإشعارات مفعلة",
+                modalEnableTitle: "تفعيل الإشعارات", modalEnableMsg: "تفعيل التنبيهات لمواعيد الصلاة؟",
+                modalDisableTitle: "إيقاف الإشعارات", modalDisableMsg: "إيقاف استلام الإشعارات من المسجد؟", btnYes: "تأكيد", btnNo: "إلغاء",
+                lblTotal: "إجمالي الزوار", lblActive: "نشط الآن",
+                btnMonthly: "جدول مواقيت الصلاة الشهري", tableTitle: "مواقيت الصلاة لشهر", thDay: "اليوم", thFajr: "الفجر", thDhuhr: "الظهر", thAsr: "العصر", thMaghrib: "المغرب", thIsha: "العشاء", btnCloseTable: "إغلاق", btnSaveImg: "حفظ كصورة",
+                monthsAr:["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"],
+                tvMode: "شاشة العرض (TV)"
+            },
+            sv: { 
+                nav: "Moské Ar-Rahman", menuTitle: "Meny", home: "Hem", prayers: "Bönetider", activities: "Aktiviteter", gallery: "Galleri", admin: "Admin", heroTitle: "Moské Ar-Rahman", heroSub: "Välkommen till Allahs hus i Perstorp, Sverige", tPrayer: "Bönetider", tAct: "Aktiviteter", tDonate: "Stöd Moskén", tSwish: "Bidra till att stödja moskén enkelt via Swish.", btnDonate: "Donera <i class='fas fa-hand-holding-usd'></i>", tGallery: "Bildgalleri", tContact: "Kontakta Admin", address: "Islamiska kultur center Perstorp, Hantverkaregatan 1, 284 31 Perstorp, Sverige", 
+                prayerNames: { fajr: "Fajr", shurooq: "Shurooq", dhuhr: "Dhuhr", asr: "Asr", maghrib: "Maghrib", isha: "Isha" }, pLabels: { adhan: "Adhan:", iqama: "Iqama:", noP: "Soluppgång" }, timerTexts: { adhan: "Tid till Adhan", iqama: "Tid till Iqama" }, notifTitle: "Notiser", notifBtnEnable: "Aktivera Notiser", notifBtnActive: "Notiser Aktiverade",
+                modalEnableTitle: "Aktivera Notiser", modalEnableMsg: "Vill du tillåta notiser för bönetider?",
+                modalDisableTitle: "Inaktivera Notiser", modalDisableMsg: "Vill du sluta ta emot notiser?", btnYes: "Bekräfta", btnNo: "Avbryt",
+                lblTotal: "Totalt Besökare", lblActive: "Aktiva Nu",
+                btnMonthly: "Månatlig Bönetidtabell", tableTitle: "Bönetider för", thDay: "Dag", thFajr: "Fajr", thDhuhr: "Dhuhr", thAsr: "Asr", thMaghrib: "Maghrib", thIsha: "Isha", btnCloseTable: "Stäng", btnSaveImg: "Spara bild",
+                monthsSv:["Januari", "Februari", "Mars", "April", "Maj", "Juni", "Juli", "Augusti", "September", "Oktober", "November", "December"],
+                tvMode: "TV-skärm"
+            }
+        };
+
+        // --- نظام الإحصائيات المباشر ---
+        auth.signInAnonymously().catch(e => e);
+        let activeUsersData =[];
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                if (!localStorage.getItem('hasVisited_v1')) {
+                    db.collection('site_statistics').doc('global_stats').set({ total_visitors: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+                    localStorage.setItem('hasVisited_v1', 'true');
+                }
+                const presenceRef = db.collection('active_users').doc(user.uid);
+                const updatePresence = () => { presenceRef.set({ last_active: firebase.firestore.FieldValue.serverTimestamp() }).catch(e=>e); };
+                updatePresence(); setInterval(updatePresence, 60000); 
+                window.addEventListener('beforeunload', () => { presenceRef.delete(); });
+            }
+        });
+
+        function listenToStatistics() {
+            db.collection('site_statistics').doc('global_stats').onSnapshot(doc => {
+                if (doc.exists) {
+                    const countEl = document.getElementById('count-total');
+                    const newCount = doc.data().total_visitors || 0;
+                    if (countEl.innerText !== newCount.toString() && countEl.innerText !== '...') {
+                        countEl.classList.remove('pop-update'); void countEl.offsetWidth; countEl.classList.add('pop-update');
+                    }
+                    countEl.innerText = newCount;
+                }
+            });
+
+            db.collection('active_users').onSnapshot(snapshot => {
+                activeUsersData =[];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.last_active) activeUsersData.push({ ref: doc.ref, time: data.last_active.toMillis() });
+                });
+                renderActiveCount();
+            });
+            setInterval(renderActiveCount, 5000);
+        }
+
+        function renderActiveCount() {
+            let activeCount = 0; const now = Date.now();
+            activeUsersData.forEach(user => {
+                if (now - user.time < 180000) activeCount++;
+                else if (now - user.time > 3600000) user.ref.delete().catch(e=>e);
+            });
+            const countEl = document.getElementById('count-active');
+            const newCount = Math.max(1, activeCount);
+            if (countEl.innerText !== newCount.toString() && countEl.innerText !== '1') {
+                countEl.classList.remove('pop-update'); void countEl.offsetWidth; countEl.classList.add('pop-update');
+            }
+            countEl.innerText = newCount;
+        }
+
+        // --- وظائف الجدول الشهري ---
+        function generateMonthlyTable() {
+            const today = new Date();
+            const monthIndex = today.getMonth();
+            const todayDate = today.getDate().toString();
+
+            const swedishMonths =["Januari", "Februari", "Mars", "April", "Maj", "Juni", "Juli", "Augusti", "September", "Oktober", "November", "December"];
+            const currentMonthNameForData = swedishMonths[monthIndex];
+
+            const displayMonthName = currentLang === 'ar' ? langData.ar.monthsAr[monthIndex] : langData.sv.monthsSv[monthIndex];
+            document.getElementById('timetable-month-name').innerText = `${langData[currentLang].tableTitle} ${displayMonthName}`;
+
+            const tbody = document.getElementById('timetable-tbody');
+            tbody.innerHTML = ''; 
+
+            if (typeof yearlyPrayerData !== 'undefined' && yearlyPrayerData.months[currentMonthNameForData]) {
+                const monthData = yearlyPrayerData.months[currentMonthNameForData];
+
+                monthData.forEach(dayInfo => {
+                    const tr = document.createElement('tr');
+                    if (dayInfo.Dat === todayDate) tr.className = 'today-row';
+
+                    tr.innerHTML = `
+                        <td style="font-weight:bold;">${dayInfo.Dat}</td>
+                        <td>${dayInfo.Fajr}</td>
+                        <td>${dayInfo.Dhohr}</td>
+                        <td>${dayInfo.Asr}</td>
+                        <td>${dayInfo.Magrib}</td>
+                        <td>${dayInfo.Isha}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                setTimeout(() => {
+                    const todayRow = document.querySelector('.today-row');
+                    if (todayRow) todayRow.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 300);
+            }
+        }
+
+        function openTimetable() {
+            generateMonthlyTable();
+            document.getElementById('timetable-backdrop').classList.add('active');
+            document.getElementById('timetable-wrapper').classList.add('active');
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeTimetable() {
+            document.getElementById('timetable-backdrop').classList.remove('active');
+            document.getElementById('timetable-wrapper').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function saveTimetableImage() {
+            const captureArea = document.getElementById('capture-area');
+            const originalBackground = captureArea.style.background;
+            captureArea.style.background = '#ffffff'; 
+
+            showToast(currentLang === 'ar' ? "جاري التقاط الصورة..." : "Sparar bild...", 2000);
+
+            html2canvas(captureArea, {
+                scale: 2, 
+                useCORS: true,
+                backgroundColor: "#ffffff"
+            }).then(canvas => {
+                captureArea.style.background = originalBackground; 
+
+                const monthName = document.getElementById('timetable-month-name').innerText;
+                const link = document.createElement('a');
+                link.download = `Moske_Ar_Rahman_${monthName}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }).catch(err => {
+                captureArea.style.background = originalBackground;
+                console.error("Error saving image:", err);
+                showToast(currentLang === 'ar' ? "حدث خطأ" : "Ett fel uppstod", 2000);
+            });
+        }
+
+        // --- وظائف متصفح الصور الداخلي (Lightbox) ---
+        function openLightbox(imageUrl) {
+            const modal = document.getElementById('lightbox-modal');
+            const img = document.getElementById('lightbox-img');
+            img.src = imageUrl;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeLightbox(event) {
+            if (event && event.target.id === 'lightbox-img') return;
+            document.getElementById('lightbox-modal').classList.remove('active');
+            document.body.style.overflow = ''; 
+        }
+
+        function openNotificationModal() {
+            toggleSidebar(); 
+            const t = langData[currentLang];
+            const modal = document.getElementById('notif-confirm-modal');
+            const title = document.getElementById('notif-modal-title');
+            const msg = document.getElementById('notif-modal-msg');
+            const icon = document.getElementById('notif-modal-icon');
+            const btnYes = document.getElementById('notif-btn-yes');
+
+            document.getElementById('notif-btn-no').innerText = t.btnNo;
+            btnYes.innerText = t.btnYes;
+
+            if (!isNotifEnabled) {
+                pendingNotifAction = 'enable';
+                title.innerText = t.modalEnableTitle; msg.innerText = t.modalEnableMsg;
+                icon.className = "fas fa-bell"; icon.style.color = "var(--primary)"; btnYes.className = "btn btn-confirm";
+            } else {
+                pendingNotifAction = 'disable';
+                title.innerText = t.modalDisableTitle; msg.innerText = t.modalDisableMsg;
+                icon.className = "fas fa-bell-slash"; icon.style.color = "var(--danger)"; btnYes.className = "btn btn-danger";
+            }
+            modal.style.display = 'flex';
+        }
+
+        function closeNotifModal() { document.getElementById('notif-confirm-modal').style.display = 'none'; }
+
+        async function confirmNotificationAction() {
+            closeNotifModal();
+            if (pendingNotifAction === 'enable') {
+                if (!('Notification' in window)) { showToast(currentLang === 'sv' ? "Stöds inte." : "غير مدعوم."); return; }
+                try {
+                    const permission = await Notification.requestPermission(); 
+                    if (permission === 'granted') {
+                        isNotifEnabled = true; localStorage.setItem('notifEnabled', 'true');
+                        updateNotifBtnUI(); 
+                        showToast(currentLang === 'sv' ? "Aktiverat! 🔔" : "تم التفعيل! 🔔");
+                        await saveFCMToken(); 
+                    }
+                } catch(e) {}
+            } else if (pendingNotifAction === 'disable') {
+                isNotifEnabled = false; localStorage.setItem('notifEnabled', 'false');
+                updateNotifBtnUI();
+                showToast(currentLang === 'sv' ? "Inaktiverat." : "تم الإيقاف.");
+            }
+        }
+
+        async function saveFCMToken() {
+            if(!messaging || !('serviceWorker' in navigator)) return;
+            try {
+                const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                const token = await messaging.getToken({ vapidKey: publicVapidKey, serviceWorkerRegistration: reg });
+                if (token) {
+                    const savedLocalToken = localStorage.getItem('savedFCMToken');
+                    if (savedLocalToken !== token) {
+                        await db.collection('users_tokens').doc(token).set({ token: token, timestamp: firebase.firestore.FieldValue.serverTimestamp(), userAgent: navigator.userAgent });
+                        localStorage.setItem('savedFCMToken', token); 
+                    }
+                }
+            } catch(e) { console.log("Token error", e); }
+        }
+
+        if (messaging) {
+            messaging.onMessage((payload) => {
+                const title = payload.notification?.title || (currentLang === 'sv' ? 'Ny Notis' : 'إشعار جديد');
+                const body = payload.notification?.body || '';
+                showToast(`🔔 ${title}: ${body}`, 5000);
+            });
+        }
+
+        async function checkAndRefreshFCMToken() {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                isNotifEnabled = true; localStorage.setItem('notifEnabled', 'true'); updateNotifBtnUI(); await saveFCMToken();
+            } else if ('Notification' in window && Notification.permission !== 'granted') {
+                isNotifEnabled = false; localStorage.setItem('notifEnabled', 'false'); updateNotifBtnUI();
+            }
+        }
+
+        setTimeout(() => {
+            if ('Notification' in window && Notification.permission === 'default' && !localStorage.getItem('notifPromptShown')) {
+                openNotificationModal(); localStorage.setItem('notifPromptShown', 'true');
+            }
+        }, 8000);
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'ar' ? 'sv' : 'ar';
+            localStorage.setItem('lang', currentLang);
+            applyTranslations(); updateAnalogClock();
+
+            if(document.getElementById('timetable-wrapper').classList.contains('active')) {
+                generateMonthlyTable();
+            }
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('sidebar-overlay').classList.toggle('active'); }
+        function toggleNotifications() { const box = document.getElementById('notif-box'); box.classList.toggle('show'); if(box.classList.contains('show')) document.getElementById('notif-dot').classList.remove('active'); }
+
+        function updateNotifBtnUI() {
+            const t = langData[currentLang]; const btnWrapper = document.getElementById('btn-toggle-notif');
+            const btnText = document.getElementById('menu-notif-btn'); const btnIcon = document.getElementById('menu-notif-icon');
+            if (isNotifEnabled) { btnText.innerText = t.notifBtnActive; btnIcon.className = "fas fa-check-circle"; btnWrapper.classList.add('btn-notif-active'); } 
+            else { btnText.innerText = t.notifBtnEnable; btnIcon.className = "fas fa-bell"; btnWrapper.classList.remove('btn-notif-active'); }
+        }
+
+        function applyTranslations() {
+            const t = langData[currentLang]; document.documentElement.lang = currentLang; document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+            if (currentLang === 'ar') document.body.classList.add('lang-ar'); else document.body.classList.remove('lang-ar');
+
+            document.getElementById('nav-title').innerText = t.nav; document.getElementById('menu-title').innerText = t.menuTitle; document.getElementById('menu-home').innerText = t.home; document.getElementById('menu-prayers').innerText = t.prayers; document.getElementById('menu-activities').innerText = t.activities; document.getElementById('menu-gallery').innerText = t.gallery; document.getElementById('menu-admin').innerText = t.admin; document.getElementById('hero-title').innerText = t.heroTitle; document.getElementById('hero-subtitle').innerText = t.heroSub; document.getElementById('title-prayer').innerText = t.tPrayer; document.getElementById('title-activities').innerText = t.tAct; document.getElementById('title-donate').innerText = t.tDonate; document.getElementById('text-swish').innerText = t.tSwish; document.getElementById('btn-donate').innerHTML = t.btnDonate; document.getElementById('title-gallery').innerText = t.tGallery; document.getElementById('title-contact').innerText = t.tContact; document.getElementById('address-text').innerText = t.address; document.getElementById('notif-title-text').innerText = t.notifTitle;
+
+            document.getElementById('label-total').innerText = t.lblTotal; document.getElementById('label-active').innerText = t.lblActive;
+
+            if(document.getElementById('menu-tv')) document.getElementById('menu-tv').innerText = t.tvMode;
+
+            document.getElementById('text-btn-monthly').innerText = t.btnMonthly;
+            document.getElementById('timetable-modal-title').innerText = t.btnMonthly;
+            document.getElementById('th-day').innerText = t.thDay;
+            document.getElementById('th-fajr').innerText = t.thFajr;
+            document.getElementById('th-dhuhr').innerText = t.thDhuhr;
+            document.getElementById('th-asr').innerText = t.thAsr;
+            document.getElementById('th-maghrib').innerText = t.thMaghrib;
+            document.getElementById('th-isha').innerText = t.thIsha;
+            document.getElementById('btn-timetable-close').innerText = t.btnCloseTable;
+            document.getElementById('btn-timetable-save').innerHTML = `<i class="fas fa-download"></i> ${t.btnSaveImg}`;
+
+            updateNotifBtnUI(); renderPrayers(); renderActivities(); renderGallery();
+        }
+
+        function createClockTicks() {
+            const face = document.getElementById('clock-face');
+            for (let i = 0; i < 60; i++) {
+                const tick = document.createElement('div');
+                tick.className = i % 5 === 0 ? 'tick hour-tick' : 'tick';
+                tick.style.transform = `rotate(${i * 6}deg)`; face.appendChild(tick);
+            }
+        }
+
+        function updateAnalogClock() {
+            const now = new Date();
+            if (now.getDate() !== currentDayTracker) {
+                currentDayTracker = now.getDate();
+                loadTodaysPrayers(); 
+            }
+            document.getElementById('second-hand').style.transform = `rotate(${((now.getSeconds() / 60) * 360)}deg)`;
+            document.getElementById('minute-hand').style.transform = `rotate(${((now.getMinutes() / 60) * 360) + ((now.getSeconds()/60)*6)}deg)`;
+            document.getElementById('hour-hand').style.transform = `rotate(${((now.getHours() / 12) * 360) + ((now.getMinutes()/60)*30)}deg)`;
+            document.getElementById('lux-date').innerText = now.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'sv-SE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        } setInterval(updateAnalogClock, 1000);
+
+        function addMinutes(timeStr, minsToAdd) { if (!timeStr) return ""; let[h, m] = timeStr.split(':').map(Number); let d = new Date(); d.setHours(h, m + minsToAdd, 0, 0); return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`; }
+
+        function loadTodaysPrayers() {
+            const today = new Date(); const monthNames =["Januari", "Februari", "Mars", "April", "Maj", "Juni", "Juli", "Augusti", "September", "Oktober", "November", "December"];
+            let tD = null; if (typeof yearlyPrayerData !== 'undefined' && yearlyPrayerData.months[monthNames[today.getMonth()]]) tD = yearlyPrayerData.months[monthNames[today.getMonth()]].find(d => d.Dat === today.getDate().toString());
+            if (!tD) tD = { Fajr: "04:00", Shuruk: "06:00", Dhohr: "13:00", Asr: "16:00", Magrib: "19:00", Isha: "21:00" };
+            prayerTimes =[ { id: 'fajr', icon: 'fa-moon', adhan: tD.Fajr, iqama: addMinutes(tD.Fajr, 20) }, { id: 'shurooq', icon: 'fa-sun', time: tD.Shuruk, type: 'no-prayer' }, { id: 'dhuhr', icon: 'fa-sun', adhan: tD.Dhohr, iqama: addMinutes(tD.Dhohr, 10) }, { id: 'asr', icon: 'fa-cloud-sun', adhan: tD.Asr, iqama: addMinutes(tD.Asr, 10) }, { id: 'maghrib', icon: 'fa-cloud-moon', adhan: tD.Magrib, iqama: addMinutes(tD.Magrib, 10) }, { id: 'isha', icon: 'fa-star-and-crescent', adhan: tD.Isha, iqama: addMinutes(tD.Isha, 10) } ];
+            renderPrayers(); 
+        }
+
+        function renderPrayers() {
+            const t = langData[currentLang]; let html = '';
+            prayerTimes.forEach(p => { html += `<div class="prayer-card" id="card-${p.id}"><i class="fas ${p.icon} prayer-icon"></i><div class="prayer-name">${t.prayerNames[p.id]}</div>`; if(p.type === 'no-prayer') html += `<div class="prayer-time">${p.time} <br> <span style="font-size:0.75rem">(${t.pLabels.noP})</span></div></div>`; else html += `<div class="prayer-time">${t.pLabels.adhan} <strong>${p.adhan}</strong><br>${t.pLabels.iqama} <strong>${p.iqama}</strong></div></div>`; });
+            document.getElementById('prayer-container').innerHTML = html; updateTimer();
+        }
+
+        function updateTimer() {
+            if (prayerTimes.length === 0) return; const now = new Date(); const t = langData[currentLang]; let target = null; let title = ""; let cId = null; 
+            for (let p of prayerTimes.filter(p => p.type !== 'no-prayer')) {
+                let aDate = new Date(); aDate.setHours(...p.adhan.split(':'), 0, 0); let iDate = new Date(); iDate.setHours(...p.iqama.split(':'), 0, 0);
+                if (now < aDate) { target = aDate; title = `${t.timerTexts.adhan} ${t.prayerNames[p.id]}`; cId = p.id; break; } 
+                else if (now < iDate) { target = iDate; title = `${t.timerTexts.iqama} ${t.prayerNames[p.id]}`; cId = p.id; break; }
+            }
+            if (!target) { let f = prayerTimes[0]; target = new Date(); target.setDate(target.getDate() + 1); target.setHours(...f.adhan.split(':'), 0, 0); title = `${t.timerTexts.adhan} ${t.prayerNames[f.id]}`; cId = f.id; }
+            let diff = target - now; let h = Math.floor((diff % 86400000) / 3600000); let m = Math.floor((diff % 3600000) / 60000); let s = Math.floor((diff % 60000) / 1000);
+            document.getElementById('timer-title').innerText = title; document.getElementById('countdown-clock').innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            document.querySelectorAll('.prayer-card').forEach(el => el.classList.remove('next-prayer')); if(document.getElementById(`card-${cId}`)) document.getElementById(`card-${cId}`).classList.add('next-prayer');
+        } setInterval(updateTimer, 1000);
+
+        function showToast(text, duration = 3000) { const toastEl = document.getElementById('app-toast-box'); document.getElementById('toast-msg-text').innerText = text; toastEl.classList.remove('show'); void toastEl.offsetWidth; toastEl.classList.add('show'); setTimeout(() => { toastEl.classList.remove('show'); }, duration); }
+
+        function listenToFirebase() {
+            db.collection("activities").orderBy("timestamp", "desc").limit(6).onSnapshot(snapshot => { siteData.activities =[]; snapshot.forEach(doc => siteData.activities.push({ id: doc.id, ...doc.data() })); renderActivities(); });
+            db.collection("gallery").orderBy("timestamp", "desc").limit(8).onSnapshot(snapshot => { siteData.gallery =[]; snapshot.forEach(doc => siteData.gallery.push({ id: doc.id, ...doc.data() })); renderGallery(); });
+            db.collection("notifications").orderBy("timestamp", "desc").limit(5).onSnapshot(snapshot => { siteData.notifications =[]; snapshot.forEach(doc => siteData.notifications.push({ id: doc.id, ...doc.data() })); renderNotifications(); });
+        }
+
+        function renderActivities() {
+            const container = document.getElementById('activities-container'); let html = '';
+            siteData.activities.forEach(act => { const title = currentLang === 'ar' ? (act.titleAr || act.title) : (act.titleSv || act.title); const desc = currentLang === 'ar' ? (act.descAr || act.desc) : (act.descSv || act.desc); html += `<div class="activity-card"><img src="${act.img}" loading="lazy" class="activity-img"><div class="activity-content"><h3 class="activity-title">${title}</h3><p class="activity-desc">${desc}</p></div></div>`; }); container.innerHTML = html;
+        }
+
+        function renderGallery() { 
+            const container = document.getElementById('gallery-container'); let html = ''; 
+            siteData.gallery.forEach(img => { html += `<div class="gallery-item" onclick="openLightbox('${img.url}')"><img src="${img.url}" loading="lazy"></div>`; }); 
+            container.innerHTML = html; 
+        }
+
+        function renderNotifications() {
+            const adminContainer = document.getElementById('admin-notifs'); let allNotifs =[]; siteData.notifications.forEach(n => { allNotifs.push({ text: currentLang === 'ar' ? n.ar : n.sv, time: n.timestamp, icon: 'fa-envelope' }); });
+            if(allNotifs.length === 0) return; let html = ''; allNotifs.forEach(n => { const date = new Date(n.time).toLocaleString(currentLang === 'ar' ? 'ar-EG' : 'sv-SE'); html += `<div class="notif-item"><i class="fas ${n.icon}" style="margin-top:4px; color: var(--primary);"></i><div><div style="font-size:0.85rem; font-weight:600;">${n.text}</div><div style="font-size:0.7rem; color:#888; margin-top:2px;">${date}</div></div></div>`; });
+            adminContainer.innerHTML = html; document.getElementById('notif-dot').classList.add('active');
+        }
+
+        const observer = new IntersectionObserver(entries => { entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); }); }, { threshold: 0.1 });
+
+        /* =========================================
+           TV Display Mode Logic (منطق شاشة العرض)
+           ========================================= */
+
+        // دالة جلب درجة الحرارة لمدينة بيرستورب السويدية
+        async function fetchTvWeather() {
+            try {
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=56.1389&longitude=13.3881&current_weather=true');
+                const data = await res.json();
+                const temp = Math.round(data.current_weather.temperature);
+                document.getElementById('tv-weather-display').innerHTML = `<i class="fas fa-cloud-sun" style="color:#d4af37;"></i> ${temp}°C`;
+            } catch (e) {
+                document.getElementById('tv-weather-display').innerHTML = '';
+            }
+        }
+
+        function enterTvMode() {
+            document.getElementById('tv-mode-overlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            renderTvPrayers();
+            setupTvClockFace();
+            fetchTvWeather(); 
+
+            let elem = document.documentElement;
+            if (elem.requestFullscreen) { elem.requestFullscreen(); }
+            else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+            else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
+        }
+
+        function exitTvMode() {
+            document.getElementById('tv-mode-overlay').classList.remove('active');
+            document.body.style.overflow = '';
+
+            if (document.exitFullscreen) { document.exitFullscreen(); }
+            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+            else if (document.msExitFullscreen) { document.msExitFullscreen(); }
+        }
+
+        function renderTvPrayers() {
+            const container = document.getElementById('tv-prayers-container');
+            const t = langData['ar']; 
+            let html = '';
+
+            prayerTimes.forEach(p => {
+                let isActive = document.getElementById(`card-${p.id}`) && document.getElementById(`card-${p.id}`).classList.contains('next-prayer') ? 'active' : '';
+
+                let iqamaText = p.type === 'no-prayer' ? `${t.pLabels.noP}` : `إقامة ${p.iqama}`;
+                let timeText = p.type === 'no-prayer' ? p.time : p.adhan;
+
+                html += `
+                <div class="tv-prayer-row ${isActive}" id="tv-row-${p.id}">
+                    <i class="fas ${p.icon} tv-prayer-icon"></i>
+                    <div class="tv-prayer-details">
+                        <div class="tv-prayer-name">${t.prayerNames[p.id]}</div>
+                        <div class="tv-prayer-time">${timeText}</div>
+                        <div class="tv-prayer-iqama">${iqamaText}</div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function setupTvClockFace() {
+            const face = document.getElementById('tv-clock-face');
+            // مسح الأرقام والخطوط القديمة
+            document.querySelectorAll('.tv-clock-number, .tv-tick-container').forEach(e => e.remove());
+
+            const arabicNumbers =['١٢', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '١٠', '١١'];
+
+            // رسم الخطوط (الشرط البيضاء)
+            for (let i = 0; i < 60; i++) {
+                const tickContainer = document.createElement('div');
+                tickContainer.className = 'tv-tick-container';
+                tickContainer.style.position = 'absolute';
+                tickContainer.style.width = i % 5 === 0 ? '4px' : '2px';
+                tickContainer.style.height = '100%'; 
+                tickContainer.style.left = `calc(50% - ${i % 5 === 0 ? '2px' : '1px'})`;
+                tickContainer.style.top = '0';
+                tickContainer.style.transform = `rotate(${i * 6}deg)`;
+
+                const tickMark = document.createElement('div');
+                tickMark.style.width = '100%';
+                tickMark.style.height = i % 5 === 0 ? '16px' : '8px';
+                tickMark.style.background = i % 5 === 0 ? '#fff' : 'rgba(255,255,255,0.5)';
+                tickMark.style.marginTop = '6px'; 
+                tickMark.style.borderRadius = '2px';
+
+                tickContainer.appendChild(tickMark);
+                face.appendChild(tickContainer);
+            }
+
+            // رسم الأرقام
+            for (let i = 0; i < 12; i++) {
+                const num = document.createElement('div');
+                num.className = 'tv-clock-number';
+                num.innerText = arabicNumbers[i];
+                let angle = (i * 30) * (Math.PI / 180);
+                let radius = 38; 
+                let x = 50 + radius * Math.sin(angle);
+                let y = 50 - radius * Math.cos(angle);
+                num.style.left = `${x}%`;
+                num.style.top = `${y}%`;
+                face.appendChild(num);
+            }
+        }
+
+        setInterval(() => {
+            if (document.getElementById('tv-mode-overlay').classList.contains('active')) {
+                fetchTvWeather();
+            }
+        }, 3600000);
+
+        setInterval(() => {
+            if (!document.getElementById('tv-mode-overlay').classList.contains('active')) return;
+
+            const now = new Date();
+
+            document.getElementById('tv-second-hand').style.transform = `rotate(${((now.getSeconds() / 60) * 360)}deg)`;
+            document.getElementById('tv-minute-hand').style.transform = `rotate(${((now.getMinutes() / 60) * 360) + ((now.getSeconds()/60)*6)}deg)`;
+            document.getElementById('tv-hour-hand').style.transform = `rotate(${((now.getHours() / 12) * 360) + ((now.getMinutes()/60)*30)}deg)`;
+
+            // ضبط التواريخ لمدينة بيرستورب السويد (Europe/Stockholm)
+            const timeZone = 'Europe/Stockholm';
+            const gregDate = now.toLocaleDateString('sv-SE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: timeZone });
+            let hijriDate = "";
+            try {
+                hijriDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric', timeZone: timeZone }).format(now);
+            } catch(e) {}
+            document.getElementById('tv-date-display').innerText = `${gregDate} | ${hijriDate}`;
+
+            const t = langData['ar'];
+            let target = null; let title = "";
+            for (let p of prayerTimes.filter(p => p.type !== 'no-prayer')) {
+                let aDate = new Date(); aDate.setHours(...p.adhan.split(':'), 0, 0); 
+                let iDate = new Date(); iDate.setHours(...p.iqama.split(':'), 0, 0);
+                if (now < aDate) { target = aDate; title = `${t.timerTexts.adhan} ${t.prayerNames[p.id]}`; break; } 
+                else if (now < iDate) { target = iDate; title = `${t.timerTexts.iqama} ${t.prayerNames[p.id]}`; break; }
+            }
+            if (!target) { 
+                let f = prayerTimes[0]; 
+                target = new Date(); target.setDate(target.getDate() + 1); 
+                target.setHours(...f.adhan.split(':'), 0, 0); 
+                title = `${t.timerTexts.adhan} ${t.prayerNames[f.id]}`; 
+            }
+            let diff = target - now; 
+            let h = Math.floor((diff % 86400000) / 3600000); 
+            let m = Math.floor((diff % 3600000) / 60000); 
+            let s = Math.floor((diff % 60000) / 1000);
+            let timeString = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+            document.getElementById('tv-countdown-text').innerText = `${title} - ${timeString}`;
+
+            renderTvPrayers(); 
+        }, 1000);
+
+        window.onload = () => { 
+            createClockTicks(); updateAnalogClock(); loadTodaysPrayers(); applyTranslations(); listenToFirebase(); listenToStatistics();
+            document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+            checkAndRefreshFCMToken(); 
+        };
+    </script>
+</body>
+</html>

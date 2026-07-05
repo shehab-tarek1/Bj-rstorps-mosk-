@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الإدارة | مسجد الرحمن</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        :root {
+            --primary: #0a3622;
+            --primary-light: #145939;
+            --secondary: #d4af37;
+            --light-bg: #f4f7f6;
+            --white: #ffffff;
+            --text-dark: #2c3e50;
+            --danger: #e74c3c;
+            --shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        html { scroll-behavior: smooth; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--light-bg); color: var(--text-dark); overflow-x: hidden; font-size: 15px; }
+        h1, h2, h3 { font-family: 'Amiri', serif; }
+
+        header {
+            position: fixed; top: 0; width: 100%; z-index: 1000; height: 60px;
+            background: rgba(10, 54, 34, 0.98); 
+            padding: 0 5%; display: flex; justify-content: space-between; align-items: center;
+            color: var(--secondary); box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .header-brand { display: flex; align-items: center; gap: 10px; font-size: 1.1em; font-weight: bold; }
+        .btn-back { color: var(--primary); background: var(--secondary); text-decoration: none; font-weight: 800; padding: 4px 12px; border-radius: 8px; font-size: 0.9em; border: 2px solid var(--secondary); }
+
+        .section { padding: 80px 2% 40px; max-width: 1400px; margin: 0 auto; position: relative; }
+        .section-header { text-align: right; margin-bottom: 15px; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+        .section-title { font-size: 1.4em; color: var(--primary); margin: 0; font-weight: bold; }
+
+        #admin-panel { background: var(--white); padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: var(--shadow); border: 1px solid rgba(0,0,0,0.05); }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .admin-header h2 { font-size: 1.6em; color: var(--primary); margin: 0; }
+        
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+
+        /* تعديل شكل البطاقات: إطار كامل بدلاً من الإطار الجانبي */
+        .admin-card { 
+            background: var(--light-bg); padding: 15px; border-radius: 12px; 
+            border: 2px solid rgba(10, 54, 34, 0.15); /* إطار يحيط بالحاوية كاملة */
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .admin-card:hover { border-color: var(--primary); }
+        .admin-card h3 { font-size: 1.1em; color: var(--primary); display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        
+        .form-control { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; font-family: inherit; font-size: 0.9em; background: var(--white); }
+        textarea.form-control { resize: vertical; min-height: 60px; }
+        .btn { background: var(--primary); color: var(--white); border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit; font-size: 0.95em; display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%; transition: opacity 0.1s;}
+        .btn:hover { opacity: 0.9; }
+        .btn-danger { background: var(--danger); }
+
+        .activities-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .activity-card { background: var(--white); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid #eee; position: relative; }
+        .activity-img { width: 100%; height: 120px; object-fit: cover; }
+        .activity-content { padding: 10px; }
+        .activity-title { font-size: 1.05em; color: var(--primary); margin-bottom: 5px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .activity-desc { color: #666; font-size: 0.85em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+        .gallery-item { position: relative; border-radius: 8px; overflow: hidden; height: 120px; box-shadow: var(--shadow); border: 1px solid #ddd; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+
+        .admin-controls { position: absolute; top: 5px; left: 5px; z-index: 10; display: flex; gap: 5px; background: rgba(255,255,255,0.95); padding: 4px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .admin-controls button { border: none; background: transparent; cursor: pointer; font-size: 1em; width: 28px; height: 28px; border-radius: 4px; display: flex; justify-content: center; align-items: center; }
+        .admin-controls .btn-edit { color: var(--primary); background: #e8f5e9; }
+        .admin-controls .btn-delete { color: var(--danger); background: #ffebee; }
+
+        /* نوافذ مصغرة وبدون ضباب */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 3000; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: var(--white); padding: 20px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: popIn 0.1s ease-out forwards; max-height: 90vh; overflow-y: auto; }
+        @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-content h3 { font-size: 1.3em; color: var(--primary); margin-bottom: 15px; }
+        .modal-content label { display: block; text-align: right; font-weight: bold; color: var(--text-dark); margin: 8px 0 3px 0; font-size: 0.85em; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
+        .modal-actions .btn { flex: 1; padding: 10px; }
+        .btn-cancel { background: #e0e6ed; color: var(--text-dark); }
+
+        .app-toast-container { position: fixed; top: 70px; left: 50%; transform: translate(-50%, -20px); background: var(--primary); color: var(--white); padding: 10px 20px; border-radius: 30px; display: flex; align-items: center; gap: 10px; opacity: 0; visibility: hidden; transition: opacity 0.2s, transform 0.2s; z-index: 10000; border: 1px solid var(--secondary); font-size: 0.95em; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .app-toast-container.show { transform: translate(-50%, 0); opacity: 1; visibility: visible; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-brand"><i class="fas fa-tools"></i> <span>إدارة المحتوى</span></div>
+        <div class="header-actions"><a href="index.html" class="btn-back"><i class="fas fa-home"></i> خروج</a></div>
+    </header>
+
+    <div class="modal-overlay" id="admin-login-modal" style="display: flex;">
+        <div class="modal-content" style="max-width: 300px;">
+            <i class="fas fa-shield-alt" style="font-size: 40px; color: var(--primary); margin-bottom: 10px;"></i>
+            <h3>تسجيل الدخول</h3>
+            <input type="email" id="admin-email" class="form-control" placeholder="البريد الإلكتروني" style="margin-bottom: 10px; text-align: left; direction: ltr;">
+            <input type="password" id="admin-pass" class="form-control" placeholder="كلمة المرور" style="margin-bottom: 15px; text-align: left; direction: ltr;">
+            <button class="btn" id="login-btn" onclick="verifyAdmin()">دخول <i class="fas fa-sign-in-alt"></i></button>
+            <p id="login-error" style="color: var(--danger); font-size: 0.85em; margin-top: 10px; display: none; font-weight: bold;">البيانات غير صحيحة!</p>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-content" style="max-width: 300px;">
+            <i class="fas fa-trash-alt" style="font-size: 35px; color: var(--danger); margin-bottom: 10px;"></i>
+            <h3 id="confirm-title" style="color: var(--danger); font-size: 1.2em;">تأكيد الحذف</h3>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeConfirmModal()">إلغاء</button>
+                <button class="btn btn-danger" id="confirm-yes-btn">حذف</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="edit-activity-modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-edit"></i> تعديل النشاط</h3>
+            <input type="hidden" id="modal-edit-act-id">
+            <label>عنوان النشاط (عربي)</label><input type="text" id="modal-act-title-ar" class="form-control">
+            <label>عنوان النشاط (سويدي)</label><input type="text" id="modal-act-title-sv" class="form-control" style="direction: ltr;">
+            <label>التفاصيل (عربي)</label><textarea id="modal-act-desc-ar" class="form-control"></textarea>
+            <label>التفاصيل (سويدي)</label><textarea id="modal-act-desc-sv" class="form-control" style="direction: ltr;"></textarea>
+            <label>تغيير الصورة (اختياري)</label><input type="file" id="modal-act-img" class="form-control" accept="image/*" style="padding: 5px;">
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeEditActivityModal()">إلغاء</button>
+                <button class="btn" id="modal-btn-save-act" onclick="saveEditedActivity()">حفظ</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="edit-gallery-modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-image"></i> تعديل الصورة</h3>
+            <input type="hidden" id="modal-edit-gal-id">
+            <label>رابط الصورة (URL)</label><input type="text" id="modal-gal-url" class="form-control" style="direction: ltr;">
+            <label>الوصف (عربي)</label><input type="text" id="modal-gal-cap-ar" class="form-control">
+            <label>الوصف (سويدي)</label><input type="text" id="modal-gal-cap-sv" class="form-control" style="direction: ltr;">
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeEditGalleryModal()">إلغاء</button>
+                <button class="btn" id="modal-btn-save-gal" onclick="saveEditedGallery()">حفظ</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="admin-dashboard" style="display: none;">
+
+        <div id="admin-panel">
+            <div class="admin-header">
+                <h2><i class="fas fa-sliders-h"></i> إدخال البيانات</h2>
+                <button class="btn btn-danger" style="width: auto; padding: 6px 12px; font-size: 0.85em;" onclick="logoutAdmin()">خروج <i class="fas fa-sign-out-alt"></i></button>
+            </div>
+
+            <div class="admin-grid">
+                <div class="admin-card">
+                    <h3><i class="fas fa-plus-circle" style="color: var(--secondary);"></i> إضافة نشاط</h3>
+                    <input type="text" id="act-title-ar" class="form-control" placeholder="العنوان (عربي)">
+                    <input type="text" id="act-title-sv" class="form-control" placeholder="Titel (Svenska)" style="direction: ltr;">
+                    <textarea id="act-desc-ar" class="form-control" placeholder="التفاصيل (عربي)"></textarea>
+                    <textarea id="act-desc-sv" class="form-control" placeholder="Detaljer (Svenska)" style="direction: ltr;"></textarea>
+                    <input type="file" id="act-img" class="form-control" accept="image/*" style="padding: 4px;">
+                    <button class="btn" onclick="addNewActivity()" id="btn-add-act">حفظ النشاط</button>
+                </div>
+
+                <div class="admin-card">
+                    <h3><i class="fas fa-upload" style="color: var(--secondary);"></i> رفع صور</h3>
+                    <input type="file" id="gallery-upload" class="form-control" multiple accept="image/*" style="padding: 4px;">
+                    <input type="text" id="gallery-caption-ar" class="form-control" placeholder="وصف الصورة (عربي)">
+                    <input type="text" id="gallery-caption-sv" class="form-control" placeholder="Beskrivning" style="direction: ltr;">
+                    <button class="btn" onclick="uploadGalleryImages()" id="btn-add-gal">رفع الصور</button>
+                </div>
+
+                <div class="admin-card">
+                    <h3><i class="fas fa-bell" style="color: var(--secondary);"></i> إرسال إشعار</h3>
+                    <input type="text" id="toast-text-ar" class="form-control" placeholder="نص الإشعار (عربي)">
+                    <input type="text" id="toast-text-sv" class="form-control" placeholder="Meddelande (Svenska)" style="direction: ltr;">
+                    <button class="btn" onclick="sendNotification()" id="btn-send-notif" style="background: #27ae60;">إرسال الآن</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-header"><h2 class="section-title">الأنشطة الحالية</h2></div>
+        <div class="activities-grid" id="activities-container"></div>
+
+        <div class="section-header" style="margin-top: 30px;"><h2 class="section-title">صور المعرض</h2></div>
+        <div class="gallery-grid" id="gallery-container"></div>
+
+    </div>
+
+    <div id="app-toast-box" class="app-toast-container"><i class="fas fa-info-circle" style="color: var(--secondary);"></i> <span id="toast-msg-text"></span></div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyDLOQ3i-cyhZV-A1oN5Jhy_OQj_KdqClzk", authDomain: "al-rahman-d0529.firebaseapp.com", projectId: "al-rahman-d0529", storageBucket: "al-rahman-d0529.firebasestorage.app" };
+        firebase.initializeApp(firebaseConfig); const db = firebase.firestore(); const ADMIN_UID = "oW1VqNujjWU2uzYWE6vWcsFpguf2";
+        let siteData = { activities:[], gallery:[] };
+
+        function showToast(text, duration = 3000) { const toastEl = document.getElementById('app-toast-box'); document.getElementById('toast-msg-text').innerText = text; toastEl.classList.remove('show'); void toastEl.offsetWidth; toastEl.classList.add('show'); setTimeout(() => { toastEl.classList.remove('show'); }, duration); }
+
+        function verifyAdmin() {
+            const email = document.getElementById('admin-email').value; const pass = document.getElementById('admin-pass').value; const btn = document.getElementById('login-btn');
+            if(!email || !pass) return; btn.disabled = true; btn.innerHTML = "...";
+            firebase.auth().signInWithEmailAndPassword(email, pass).then((userCred) => {
+                if (userCred.user.uid === ADMIN_UID) { document.getElementById('admin-login-modal').style.display = 'none'; document.getElementById('admin-dashboard').style.display = 'block'; listenToFirebase(); } 
+                else { firebase.auth().signOut(); throw new Error("Unauthorized"); }
+            }).catch(() => { document.getElementById('login-error').style.display = 'block'; }).finally(() => { btn.disabled = false; btn.innerHTML = "دخول"; });
+        }
+
+        function logoutAdmin() { firebase.auth().signOut().then(() => { location.reload(); }); }
+
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user && user.uid === ADMIN_UID) { document.getElementById('admin-login-modal').style.display = 'none'; document.getElementById('admin-dashboard').style.display = 'block'; listenToFirebase(); } 
+            else { document.getElementById('admin-login-modal').style.display = 'flex'; document.getElementById('admin-dashboard').style.display = 'none'; }
+        });
+
+        function listenToFirebase() {
+            db.collection("activities").orderBy("timestamp", "desc").onSnapshot(snapshot => { siteData.activities =[]; snapshot.forEach(doc => siteData.activities.push({ id: doc.id, ...doc.data() })); renderActivities(); });
+            db.collection("gallery").orderBy("timestamp", "desc").onSnapshot(snapshot => { siteData.gallery =[]; snapshot.forEach(doc => siteData.gallery.push({ id: doc.id, ...doc.data() })); renderGallery(); });
+        }
+
+        function renderActivities() {
+            const container = document.getElementById('activities-container'); let html = '';
+            siteData.activities.forEach(act => { const title = act.titleAr || act.title; const desc = act.descAr || act.desc; let adminBtns = `<div class="admin-controls"><button class="btn-edit" onclick="openEditActivityModal('${act.id}')"><i class="fas fa-pen"></i></button><button class="btn-delete" onclick="deleteActivity('${act.id}')"><i class="fas fa-trash"></i></button></div>`; html += `<div class="activity-card">${adminBtns}<img src="${act.img}" class="activity-img" loading="lazy"><div class="activity-content"><div class="activity-title" title="${title}">${title}</div><div class="activity-desc" title="${desc}">${desc}</div></div></div>`; });
+            container.innerHTML = html;
+        }
+
+        function renderGallery() {
+            const container = document.getElementById('gallery-container'); let html = '';
+            siteData.gallery.forEach(img => { const cap = img.captionAr || img.caption; let adminBtns = `<div class="admin-controls"><button class="btn-edit" onclick="openEditGalleryModal('${img.id}')"><i class="fas fa-pen"></i></button><button class="btn-delete" onclick="deleteGallery('${img.id}')"><i class="fas fa-trash"></i></button></div>`; html += `<div class="gallery-item">${adminBtns}<img src="${img.url}" loading="lazy"></div>`; });
+            container.innerHTML = html;
+        }
+
+        let confirmActionCallback = null;
+        function showConfirmModal(callback) { confirmActionCallback = callback; document.getElementById('confirm-modal').style.display = 'flex'; }
+        function closeConfirmModal() { document.getElementById('confirm-modal').style.display = 'none'; confirmActionCallback = null; }
+        document.getElementById('confirm-yes-btn').addEventListener('click', () => { if(confirmActionCallback) confirmActionCallback(); closeConfirmModal(); });
+        function deleteActivity(id) { showConfirmModal(() => { db.collection("activities").doc(id).delete(); showToast("تم الحذف"); }); }
+        function deleteGallery(id) { showConfirmModal(() => { db.collection("gallery").doc(id).delete(); showToast("تم الحذف"); }); }
+
+        async function uploadToCloudinary(file) { const fd = new FormData(); fd.append("file", file); fd.append("upload_preset", "souq_upload"); const res = await fetch(`https://api.cloudinary.com/v1_1/db9h7zm1h/image/upload`, { method: "POST", body: fd }); const data = await res.json(); return data.secure_url.replace('/upload/', '/upload/w_400,q_auto,f_auto/'); }
+
+        async function addNewActivity() {
+            const titleAr = document.getElementById('act-title-ar').value; const titleSv = document.getElementById('act-title-sv').value || titleAr; const descAr = document.getElementById('act-desc-ar').value; const descSv = document.getElementById('act-desc-sv').value || descAr; const file = document.getElementById('act-img').files[0];
+            if(!titleAr) return; const btn = document.getElementById('btn-add-act'); btn.innerHTML = "..."; btn.disabled = true;
+            let data = { titleAr, titleSv, descAr, descSv, timestamp: Date.now() };
+            if(file) { try { data.img = await uploadToCloudinary(file); } catch(e){} } else { data.img = "https://images.pexels.com/photos/8166072/pexels-photo-8166072.jpeg?auto=compress&cs=tinysrgb&w=400"; }
+            db.collection("activities").add(data).then(() => { showToast("تم الحفظ ✔️"); document.getElementById('act-title-ar').value=''; document.getElementById('act-title-sv').value=''; document.getElementById('act-desc-ar').value=''; document.getElementById('act-desc-sv').value=''; document.getElementById('act-img').value=''; }).finally(() => { btn.innerHTML = "حفظ النشاط"; btn.disabled = false; });
+        }
+
+        async function uploadGalleryImages() {
+            const files = document.getElementById('gallery-upload').files; if(files.length === 0) return; const btn = document.getElementById('btn-add-gal'); btn.innerHTML = "..."; btn.disabled = true; const capAr = document.getElementById('gallery-caption-ar').value; const capSv = document.getElementById('gallery-caption-sv').value || capAr;
+            try { for(let f of files) { const url = await uploadToCloudinary(f); await db.collection("gallery").add({ url, captionAr: capAr, captionSv: capSv, timestamp: Date.now() }); } showToast("تم الرفع ✔️"); document.getElementById('gallery-upload').value = ''; document.getElementById('gallery-caption-ar').value = ''; document.getElementById('gallery-caption-sv').value = ''; } catch(e) { } finally { btn.innerHTML = "رفع الصور"; btn.disabled = false; }
+        }
+
+        function sendNotification() {
+            const ar = document.getElementById('toast-text-ar').value; const sv = document.getElementById('toast-text-sv').value || ar; if(!ar) return; const btn = document.getElementById('btn-send-notif'); btn.innerHTML = "..."; btn.disabled = true;
+            db.collection("notifications").add({ ar, sv, timestamp: Date.now(), type: "admin_push" }).then(() => { showToast("تم الإرسال ✔️"); document.getElementById('toast-text-ar').value = ''; document.getElementById('toast-text-sv').value = ''; }).finally(() => { btn.innerHTML = "إرسال الآن"; btn.disabled = false; });
+        }
+
+        function openEditActivityModal(id) { const act = siteData.activities.find(a => a.id === id); if(!act) return; document.getElementById('modal-edit-act-id').value = id; document.getElementById('modal-act-title-ar').value = act.titleAr || ''; document.getElementById('modal-act-title-sv').value = act.titleSv || ''; document.getElementById('modal-act-desc-ar').value = act.descAr || ''; document.getElementById('modal-act-desc-sv').value = act.descSv || ''; document.getElementById('modal-act-img').value = ''; document.getElementById('edit-activity-modal').style.display = 'flex'; }
+        function closeEditActivityModal() { document.getElementById('edit-activity-modal').style.display = 'none'; }
+        async function saveEditedActivity() { const id = document.getElementById('modal-edit-act-id').value; const titleAr = document.getElementById('modal-act-title-ar').value; const titleSv = document.getElementById('modal-act-title-sv').value || titleAr; const descAr = document.getElementById('modal-act-desc-ar').value; const descSv = document.getElementById('modal-act-desc-sv').value || descAr; const file = document.getElementById('modal-act-img').files[0]; const btn = document.getElementById('modal-btn-save-act'); if(!titleAr) return; btn.disabled = true; btn.innerHTML = "..."; let updateData = { titleAr, titleSv, descAr, descSv }; if(file) { try { updateData.img = await uploadToCloudinary(file); } catch(e){} } db.collection("activities").doc(id).update(updateData).then(() => { showToast("تم التحديث"); closeEditActivityModal(); }).finally(() => { btn.disabled = false; btn.innerHTML = "حفظ"; }); }
+
+        function openEditGalleryModal(id) { const img = siteData.gallery.find(g => g.id === id); if(!img) return; document.getElementById('modal-edit-gal-id').value = id; document.getElementById('modal-gal-url').value = img.url || ''; document.getElementById('modal-gal-cap-ar').value = img.captionAr || ''; document.getElementById('modal-gal-cap-sv').value = img.captionSv || ''; document.getElementById('edit-gallery-modal').style.display = 'flex'; }
+        function closeEditGalleryModal() { document.getElementById('edit-gallery-modal').style.display = 'none'; }
+        function saveEditedGallery() { const id = document.getElementById('modal-edit-gal-id').value; const url = document.getElementById('modal-gal-url').value; const capAr = document.getElementById('modal-gal-cap-ar').value; const capSv = document.getElementById('modal-gal-cap-sv').value || capAr; const btn = document.getElementById('modal-btn-save-gal'); if(!url) return; btn.disabled = true; btn.innerHTML = "..."; db.collection("gallery").doc(id).update({ url: url, captionAr: capAr, captionSv: capSv }).then(() => { showToast("تم التحديث"); closeEditGalleryModal(); }).finally(() => { btn.disabled = false; btn.innerHTML = "حفظ"; }); }
+    </script>
+</body>
+</html>

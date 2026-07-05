@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1081097400036",
+    "project_id": "al-rahman-d0529",
+    "storage_bucket": "al-rahman-d0529.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1081097400036:android:f3bd90b50f6fb9e6ae06f1",
+        "android_client_info": {
+          "package_name": "app.netlify.perstorp_moske.twa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDd-YU-AD9EUCbmWu4f7XFlCVX2Zu8VAzo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
