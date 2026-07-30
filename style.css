@@ -1,0 +1,353 @@
+:root {
+    --primary: #0a3622;
+    --secondary: #d4af37;
+    --light-bg: #f8f9fa;
+    --white: #ffffff;
+    --text-dark: #2c3e50;
+    --text-muted: #6c7a89;
+    --success: #27ae60;
+    --danger: #e74c3c;
+    --shadow: 0 4px 15px rgba(0,0,0,0.05);
+    --transition: all 0.1s ease-out; 
+}
+
+html { scroll-behavior: smooth; }
+.no-transition, .no-transition * { transition: none !important; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--light-bg); color: var(--text-dark); overflow-x: hidden; }
+
+/* توافق الأحجام بين اللغتين لمنع الاهتزاز */
+body.lang-ar { font-family: 'Cairo', sans-serif; font-size: 0.95rem; }
+body.lang-ar h1, body.lang-ar h2, body.lang-ar h3 { font-family: 'Amiri', serif; }
+body.lang-ar .header-brand { font-size: 1.05rem; }
+body.lang-ar .hero-title { font-size: 1.8rem; }
+body.lang-ar .hero-subtitle { font-size: 1rem; }
+body.lang-ar .section-title { font-size: 1.6rem; }
+body.lang-ar .timer-title { font-size: 0.85rem; }
+body.lang-ar .countdown-clock { font-size: 1.6rem; }
+body.lang-ar .prayer-name { font-size: 0.9rem; }
+body.lang-ar .prayer-time { font-size: 0.8rem; }
+body.lang-ar .activity-title { font-size: 1rem; }
+body.lang-ar .activity-desc { font-size: 0.85rem; line-height: 1.5; }
+body.lang-ar .clock-number { font-size: 1rem; }
+body.lang-ar .lux-date { font-size: 0.85rem; }
+body.lang-ar .menu-links a, body.lang-ar .menu-links button { font-size: 0.95rem; }
+body.lang-ar .btn, body.lang-ar .donate-btn-modern { font-size: 0.9rem; }
+body.lang-ar .city-badge { font-size: 0.85rem; padding: 2px 10px; }
+
+/* تعديل الهيدر العلوي بحيث لا يترك مساحات جانبية كبيرة */
+header {
+    position: fixed; top: 0; width: 100%; z-index: 1000; height: 65px;
+    background: rgba(10, 54, 34, 0.98); 
+    padding: 0 10px; display: flex; justify-content: space-between; align-items: center;
+    color: var(--secondary); box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.header-brand { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: bold; white-space: nowrap; }
+.header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
+.icon-btn { cursor: pointer; font-size: 20px; transition: var(--transition); }
+.icon-btn:hover { color: var(--white); }
+
+.bell-container { position: relative; }
+.notif-dot { position: absolute; top: 0; right: -2px; width: 10px; height: 10px; background-color: #ff3b30; border-radius: 50%; display: none; border: 2px solid rgba(10, 54, 34, 0.95); }
+.notif-dot.active { display: block; }
+
+.notif-box {
+    position: absolute; top: 50px; left: auto; right: 0; width: 300px; background: var(--white);
+    border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); opacity: 0; visibility: hidden;
+    transform: translateY(-5px); transition: opacity 0.1s, transform 0.1s; z-index: 1001;
+    display: flex; flex-direction: column; overflow: hidden;
+}[dir="rtl"] .notif-box { left: 0; right: auto; }
+.notif-box.show { opacity: 1; visibility: visible; transform: translateY(0); }
+.notif-header { background: var(--primary); color: var(--secondary); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 0.95rem; }
+.notif-body { max-height: 350px; overflow-y: auto; }
+.notif-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; gap: 10px; color: var(--text-dark); }
+.notif-item.prayer-alert { background: #f4fdf8; border-left: 3px solid var(--secondary); border-bottom: 2px solid var(--secondary); }[dir="rtl"] .notif-item.prayer-alert { border-left: none; border-right: 3px solid var(--secondary); }
+
+.sidebar-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1001;
+    opacity: 0; visibility: hidden; transition: opacity 0.2s ease;
+}
+.sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+.sidebar {
+    position: fixed; top: 0; left: 0; right: auto; width: 220px; height: 100vh;
+    background: var(--white); box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    transform: translateX(-100%); transition: transform 0.2s ease;
+    z-index: 1002; display: flex; flex-direction: column;
+}[dir="rtl"] .sidebar { left: auto; right: 0; transform: translateX(100%); box-shadow: -2px 0 10px rgba(0,0,0,0.1); }
+.sidebar.active { transform: translateX(0); }
+
+.sidebar-header { padding: 15px; background: var(--primary); color: var(--secondary); display: flex; justify-content: space-between; align-items: center; }
+.menu-links { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+.menu-links a, .menu-links button { text-decoration: none; color: var(--text-dark); font-size: 1rem; font-weight: 600; padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; text-align: left; font-family: inherit; width: 100%; transition: background 0.1s;}
+[dir="rtl"] .menu-links a,[dir="rtl"] .menu-links button { text-align: right; }
+.menu-links a:hover, .menu-links button:hover { background: var(--light-bg); color: var(--primary); }
+
+.btn-notif-active { color: var(--success) !important; background: rgba(39, 174, 96, 0.1) !important; border: 1px solid rgba(39, 174, 96, 0.2) !important; }
+
+.hero {
+    position: relative; padding-top: 65px; min-height: 350px; height: auto;
+    background-image: url('https://res.cloudinary.com/dsxrjmcxs/image/upload/c_limit,w_1100,q_auto,f_auto/v1777669774/cufyfeqolg9b0lbx1nyd.jpg');
+    background-position: center center; background-size: cover; background-repeat: no-repeat;
+    display: flex; align-items: center; justify-content: center; text-align: center; padding-bottom: 50px;
+}
+.hero-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,54,34,0.4), rgba(10,54,34,0.8)); }
+.hero-content { position: relative; z-index: 1; color: var(--white); padding: 0 20px; width: 100%; max-width: 800px; animation: fadeInUp 0.4s ease-out forwards; }
+.hero-title { font-size: 2rem; color: var(--secondary); margin-bottom: 5px; text-shadow: 2px 2px 5px rgba(0,0,0,0.8); word-break: break-word; letter-spacing: 0.5px;}
+.hero-subtitle { font-size: 1.1rem; margin-bottom: 10px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); line-height: 1.5; }
+
+.section { padding: 40px 5%; max-width: 1200px; margin: 0 auto; position: relative;}
+.section-header { text-align: center; margin-bottom: 25px; }
+.title-row { display: flex; justify-content: center; align-items: baseline; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+.section-title { font-size: 1.8rem; color: var(--primary); margin: 0; word-break: break-word; }
+.city-badge { font-size: 0.85rem; color: var(--white); background: var(--secondary); padding: 2px 10px; border-radius: 20px; font-weight: bold; font-family: inherit; }
+.title-separator { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.title-separator::before, .title-separator::after { content: ''; height: 2px; width: 40px; background: linear-gradient(to right, transparent, var(--secondary), transparent); border-radius: 2px; }
+.title-separator i { color: var(--primary); font-size: 1rem; }
+
+.timer-container { text-align: center; margin-bottom: 25px; background: var(--white); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); border-bottom: 3px solid var(--secondary); width: fit-content; min-width: 200px; max-width: 90%; margin-left: auto; margin-right: auto; }
+.timer-title { font-size: 0.9rem; color: var(--text-dark); margin-bottom: 5px; font-weight: bold; }
+.countdown-clock { font-size: 1.6rem; font-weight: bold; color: var(--primary); font-family: monospace; letter-spacing: 2px; direction: ltr; }
+
+.prayer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+.prayer-card { background: var(--white); border-radius: 10px; padding: 10px; text-align: center; box-shadow: var(--shadow); border-bottom: 3px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: center;}
+.prayer-card.next-prayer { background: var(--primary); color: var(--white); border-bottom-color: var(--secondary); }
+.prayer-icon { font-size: 20px; color: var(--secondary); margin-bottom: 5px; }
+.prayer-name { font-size: 0.95rem; font-weight: bold; margin-bottom: 2px; }
+.prayer-time { font-size: 0.85rem; color: #666; }
+.prayer-card.next-prayer .prayer-time { color: #ddd; }
+
+.stats-bar { display: flex; justify-content: center; gap: 20px; padding: 15px; margin: -10px auto 20px auto; max-width: 600px; background: var(--white); border-radius: 12px; box-shadow: var(--shadow); flex-wrap: wrap; border: 1px solid rgba(10,54,34,0.1); }
+.stat-item { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 120px; }
+.stat-item:not(:last-child) { border-right: 2px solid var(--light-bg); }[dir="rtl"] .stat-item:not(:last-child) { border-right: none; border-left: 2px solid var(--light-bg); }
+.stat-number { font-size: 1.5rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; font-family: monospace; }
+.stat-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-top: 5px; }
+
+.active-icon-wrapper { position: relative; display: inline-flex; }
+.pulse-dot { position: absolute; top: -3px; right: -5px; width: 10px; height: 10px; background-color: var(--success); border-radius: 50%; box-shadow: 0 0 0 rgba(39, 174, 96, 0.4); animation: pulse 1.5s infinite; border: 2px solid var(--white); }[dir="rtl"] .pulse-dot { right: auto; left: -5px; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(39, 174, 96, 0); } 100% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); } }
+
+@keyframes popUpdate { 0% { transform: scale(1); } 50% { transform: scale(1.3); color: var(--success); } 100% { transform: scale(1); } }
+.pop-update { animation: popUpdate 0.4s ease-out forwards; display: inline-block; }
+
+.btn-monthly-wrapper { text-align: center; margin-bottom: 30px; }
+.btn-monthly { background: linear-gradient(135deg, var(--primary), #0c4a2e); color: var(--white); border: 1px solid var(--secondary); padding: 10px 25px; border-radius: 30px; font-size: 1rem; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: transform 0.2s; font-family: inherit; }
+.btn-monthly:active { transform: scale(0.95); }
+
+.timetable-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; opacity: 0; transition: opacity 0.3s; }
+.timetable-backdrop.active { display: block; opacity: 1; }
+
+.timetable-wrapper { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -45%); width: 95%; max-width: 600px; max-height: 85vh; background: var(--white); border-radius: 15px; z-index: 2001; box-shadow: 0 10px 30px rgba(0,0,0,0.3); opacity: 0; transition: all 0.3s ease; flex-direction: column; overflow: hidden;}
+.timetable-wrapper.active { display: flex; transform: translate(-50%, -50%); opacity: 1; }
+
+.timetable-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--primary); color: var(--secondary); }
+.timetable-header h3 { margin: 0; font-size: 1.2rem; }
+.timetable-body { padding: 15px; overflow-y: auto; background: var(--light-bg); }
+.timetable-footer { padding: 15px; background: var(--white); display: flex; gap: 10px; border-top: 1px solid #eee; }
+.timetable-footer .btn { flex: 1; justify-content: center; padding: 10px; font-size: 0.95rem; }
+
+.pray-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: center; background: var(--white); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.pray-table th { background: var(--primary); color: var(--secondary); padding: 10px 5px; position: sticky; top: 0; z-index: 10; font-weight: bold; border-bottom: 2px solid var(--secondary); }
+.pray-table td { padding: 8px 5px; border-bottom: 1px solid #eee; color: var(--text-dark); font-family: monospace; font-size: 0.9rem;}
+.pray-table tr:nth-child(even) { background-color: #fcfcfc; }
+.pray-table tr.today-row { background-color: rgba(212, 175, 55, 0.15); font-weight: bold; border-left: 3px solid var(--secondary); border-right: 3px solid var(--secondary); }
+
+.activities-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+.activity-card { background: var(--white); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+.activity-img { width: 100%; height: 140px; object-fit: cover; }
+.activity-content { padding: 12px; }
+.activity-title { font-size: 1.05rem; color: var(--primary); margin-bottom: 5px; font-weight: bold; }
+.activity-desc { color: #666; font-size: 0.9rem; max-height: 80px; overflow-y: auto; padding-right: 5px; white-space: pre-wrap; line-height: 1.4; }
+
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.gallery-item { position: relative; border-radius: 8px; overflow: hidden; height: 140px; box-shadow: var(--shadow); cursor: pointer; }
+.gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+.gallery-item:hover img { transform: scale(1.05); }
+.gallery-caption { position: absolute; bottom: 0; left: 0; width: 100%; padding: 5px; background: rgba(0,0,0,0.7); color: var(--white); text-align: center; font-size: 0.8rem; opacity: 0; transition: opacity 0.2s;}
+.gallery-item:hover .gallery-caption { opacity: 1; }
+
+.lightbox-overlay { display: none; position: fixed; z-index: 5000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+.lightbox-overlay.active { display: flex; opacity: 1; }
+.lightbox-content { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 25px rgba(0,0,0,0.5); object-fit: contain; }
+.lightbox-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 5001; transition: color 0.2s; }
+.lightbox-close:hover { color: var(--secondary); }
+[dir="rtl"] .lightbox-close { right: auto; left: 30px; }
+
+.donation-wrap { background: linear-gradient(145deg, #ffffff, #f4fdf8); border-radius: 15px; padding: 25px 15px; box-shadow: var(--shadow); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-evenly; gap: 15px; border: 1px solid rgba(212, 175, 55, 0.2); }
+.donation-info { text-align: center; max-width: 400px; }
+.donation-info p { font-size: 0.95rem; color: #555; margin-bottom: 10px; line-height: 1.4; }
+.swish-number { font-size: 1.3rem; font-weight: 800; color: var(--primary); letter-spacing: 1px; padding: 5px 15px; background: var(--white); border-radius: 8px; margin: 5px 0; border: 2px dashed var(--secondary); display: inline-block; }
+.donate-btn-modern { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, var(--secondary), #b8962e); color: var(--white); padding: 8px 20px; border-radius: 30px; font-size: 0.95rem; font-weight: bold; text-decoration: none; margin-top: 10px; }
+
+.contact-card { background: linear-gradient(135deg, var(--primary), #052014); color: var(--white); border-radius: 15px; padding: 30px 15px; text-align: center; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.contact-avatar { width: 70px; height: 70px; background: var(--secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); margin: 0 auto 10px auto; border: 3px solid var(--white); }
+.social-btns { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+.btn { padding: 8px 15px; border-radius: 30px; border: none; text-decoration: none; color: var(--white); font-weight: bold; display: inline-flex; align-items: center; gap: 5px; font-size: 0.9rem; cursor: pointer; }
+.btn-wa { background: #25D366; } .btn-fb { background: #1877F2; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 3000; display: none; justify-content: center; align-items: center; }
+.modal-content { background: var(--white); padding: 20px; border-radius: 12px; width: 85%; max-width: 300px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); animation: popIn 0.15s ease-out forwards; }
+@keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal-actions { display: flex; gap: 8px; margin-top: 15px; }
+.modal-actions .btn { flex: 1; padding: 8px; justify-content: center; font-size: 0.9rem;}
+.btn-cancel { background: #e0e6ed; color: var(--text-dark); }
+.btn-confirm { background: var(--primary); }
+.btn-danger { background: var(--danger); }
+
+.app-toast-container { position: fixed; top: 80px; left: 50%; transform: translate(-50%, -20px); background: linear-gradient(135deg, var(--primary), #0c4a2e); color: var(--white); padding: 10px 20px; border-radius: 30px; display: flex; align-items: center; gap: 10px; opacity: 0; visibility: hidden; transition: opacity 0.2s, transform 0.2s; z-index: 10000; border: 1px solid var(--secondary); text-align: center; max-width: 90%; font-size: 1rem; font-family: inherit; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+.app-toast-container.show { transform: translate(-50%, 0); opacity: 1; visibility: visible; }
+
+.fade-in { opacity: 0; transform: translateY(10px); transition: opacity 0.2s ease, transform 0.2s ease; }
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+
+.clock-section { display: flex; justify-content: center; align-items: center; margin-top: -30px; position: relative; z-index: 10; padding: 0 20px; margin-bottom: 10px; }
+.lux-clock-wrapper { background: linear-gradient(145deg, #0a3622, #052014); border: 2px solid var(--secondary); border-radius: 20px; padding: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); text-align: center; color: var(--white); display: flex; flex-direction: column; align-items: center; }
+.analog-clock { width: 140px; height: 140px; border: 3px solid var(--secondary); border-radius: 50%; margin-bottom: 8px; position: relative; background: radial-gradient(circle, #0a3622 0%, #03120b 100%); box-sizing: border-box; }
+.clock-face { width: 100%; height: 100%; position: relative; }
+.tick { position: absolute; top: 4px; left: 50%; width: 2px; height: 5px; background: rgba(212, 175, 55, 0.5); transform-origin: 50% 63px; margin-left: -1px; z-index: 1; }
+.tick.hour-tick { width: 3px; height: 8px; background: var(--secondary); margin-left: -1.5px; transform-origin: 50% 63px; }
+.clock-number { position: absolute; font-family: 'Amiri', serif; font-size: 1rem; font-weight: bold; color: var(--secondary); transform: translate(-50%, -50%); z-index: 2; }
+.num-12 { top: 18px; left: 50%; } .num-3 { top: 50%; left: calc(100% - 18px); } .num-6 { top: calc(100% - 18px); left: 50%; } .num-9 { top: 50%; left: 18px; }
+.hand { position: absolute; bottom: 50%; transform-origin: bottom center; border-radius: 10px; z-index: 3; }
+.hour-hand { width: 4px; height: 35px; background: var(--white); left: calc(50% - 2px); }
+.minute-hand { width: 3px; height: 50px; background: var(--secondary); left: calc(50% - 1.5px); }
+.second-hand { width: 2px; height: 60px; background: #ff3b30; left: calc(50% - 1px); z-index: 4; }
+.center-dot { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: var(--secondary); border-radius: 50%; transform: translate(-50%, -50%); z-index: 5; }
+.lux-date { font-size: 0.9rem; color: #e0e0e0; font-weight: 600; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 8px; }
+
+/* =========================================
+   TV Display Mode Styles (وضع شاشة العرض)
+   ========================================= */
+.tv-mode-overlay {
+    display: none; position: fixed; inset: 0; z-index: 99999;
+    background-color: #000; color: #fff; font-family: 'Cairo', sans-serif;
+    overflow: hidden; direction: rtl !important; /* إجبار الاتجاه لليمين دائماً */
+}
+.tv-mode-overlay.active { 
+    display: flex; 
+    flex-direction: column; 
+    height: 100vh; 
+    overflow: hidden;
+}
+
+.tv-exit-btn {
+    position: absolute; top: 20px; left: 20px; z-index: 100000;
+    background: rgba(0,0,0,0.5); color: #fff; border: 2px solid #fff;
+    padding: 10px 15px; border-radius: 8px; font-size: 1.2rem; cursor: pointer;
+    opacity: 0; transition: opacity 0.3s;
+}
+.tv-mode-overlay:hover .tv-exit-btn { opacity: 1; }
+
+/* Layout for TV Mode */
+.tv-layout { 
+    display: flex; 
+    flex-direction: row-reverse; 
+    width: 100vw; 
+    flex: 1; 
+    overflow: hidden; 
+}
+
+/* الشريط الجانبي (مواقيت الصلاة) - على اليسار بصرياً بسبب row-reverse */
+.tv-sidebar {
+    width: 28%; background: linear-gradient(to bottom, #004b87, #002b5e);
+    display: flex; flex-direction: column; border-right: 3px solid #d4af37;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.5); z-index: 2;
+    padding-bottom: 5px; /* تقليل المساحة السفلية لضمان عدم تداخل العشاء مع الشريط */
+    position: relative;
+}
+
+/* صف الصلاة - ضبط التمدد لعدم اختفاء صلاة العشاء */
+.tv-prayer-row {
+    flex: 1; min-height: 0; display: flex; flex-direction: row; align-items: center; 
+    padding: 0 15px 0 25px; border-bottom: 1px solid rgba(255,255,255,0.1); 
+    direction: ltr; justify-content: flex-start; gap: 15px;
+}
+.tv-prayer-row.active { background: rgba(255, 255, 255, 0.1); border-left: 8px solid #d4af37; padding-left: 17px; border-right: none; }
+.tv-prayer-icon { font-size: min(3vw, 3.5vh); color: #fff; }
+.tv-prayer-details { display: flex; flex-direction: column; align-items: center; text-align: center; direction: rtl; }
+.tv-prayer-name { font-size: min(1.8vw, 2.5vh); font-weight: bold; color: #e0e0e0; margin-bottom: 2px; }
+.tv-prayer-time { font-size: min(3.5vw, 3.5vh); font-weight: 900; color: #fff; line-height: 1; font-family: monospace; letter-spacing: 2px; direction: ltr; }
+.tv-prayer-iqama { font-size: min(1vw, 1.5vh); color: #fff; background: rgba(0,0,0,0.4); padding: 3px 10px; border-radius: 10px; display: inline-block; margin-top: 6px; }
+
+/* المنطقة الرئيسية (الخلفية والساعة) - على اليمين بصرياً */
+.tv-main {
+    width: 72%; position: relative;
+    background-image: url('https://res.cloudinary.com/dsxrjmcxs/image/upload/c_limit,w_1000,q_auto,f_auto/v1777669774/cufyfeqolg9b0lbx1nyd.jpg');
+    background-size: cover; background-position: center;
+}
+.tv-main-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.2); }
+
+/* الهيدر العلوي */
+.tv-header {
+    position: absolute; top: 0; left: 0; right: 0; padding: 30px 40px;
+    display: flex; justify-content: space-between; align-items: flex-start; z-index: 3;
+    flex-direction: row; /* في وضع RTL يضع العنصر الأول أقصى اليمين */
+}
+.tv-mosque-info { 
+    display: flex; flex-direction: column; align-items: flex-start; /* اليمين في وضع RTL */
+    text-align: right; gap: 5px; 
+}
+.tv-mosque-logo { font-size: 3.5vw; color: #fff; text-shadow: 2px 2px 4px #000; margin-bottom: 5px;}
+.tv-mosque-info h1 { font-size: 2.5vw; font-family: 'Amiri', serif; color: #d4af37; text-shadow: 2px 2px 4px #000; margin: 0; line-height: 1.2; }
+.tv-mosque-info p { font-size: 1.2vw; color: #fff; text-shadow: 1px 1px 2px #000; margin: 0; }
+
+.tv-date-bar { 
+    background: rgba(0, 75, 135, 0.8); padding: 10px 25px; border-radius: 20px; 
+    font-size: min(1.2vw, 2vh); font-weight: bold; border: 1px solid #d4af37; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; 
+    gap: 10px; white-space: nowrap; /* إبقاء المستطيل سطراً واحداً دائماً */
+}
+
+/* الساعة الأنالوج الزرقاء */
+.tv-clock-wrapper {
+    position: absolute; top: 50%; left: 8%; /* تحريك الساعة لليمين لتبتعد عن الرموز */
+    transform: translate(-50%, -50%); z-index: 10;
+}
+.tv-analog-clock {
+    width: 28vw; height: 28vw; 
+    max-width: 55vh; max-height: 55vh; 
+    min-width: 250px; min-height: 250px;
+    aspect-ratio: 1 / 1; /* إجبار الساعة على أن تكون دائرية 100% */
+    border: 12px solid #002b5e; border-radius: 50%;
+    background: radial-gradient(circle, #00509e 0%, #002b5e 100%);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7), inset 0 0 30px rgba(0,0,0,0.8);
+    position: relative;
+}
+.tv-clock-face { width: 100%; height: 100%; position: relative; }
+.tv-clock-number {
+    position: absolute; font-size: 2vw; font-weight: bold; color: #fff;
+    transform: translate(-50%, -50%); font-family: 'Amiri', serif; text-shadow: 2px 2px 4px #000;
+}
+.tv-hand { position: absolute; bottom: 50%; transform-origin: bottom center; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+.tv-hour-hand { width: 10px; height: 25%; background: #fff; left: calc(50% - 5px); }
+.tv-minute-hand { width: 6px; height: 38%; background: #e0e0e0; left: calc(50% - 3px); }
+.tv-second-hand { width: 3px; height: 45%; background: #ff3b30; left: calc(50% - 1.5px); }
+.tv-center-dot { position: absolute; top: 50%; left: 50%; width: 24px; height: 24px; background: #ff3b30; border-radius: 50%; transform: translate(-50%, -50%); border: 4px solid #fff; z-index: 5; }
+.tv-clock-brand { position: absolute; bottom: 25%; left: 50%; transform: translateX(-50%); text-align: center; color: #fff; opacity: 0.8; }
+.tv-clock-brand div { font-size: 1vw; font-weight: bold; letter-spacing: 2px; }
+.tv-clock-brand span { font-size: 0.7vw; }
+
+/* منطقة العداد فوق الشريط الإخباري تصغير حجم العداد */
+.tv-bottom-area {
+    position: absolute; bottom: 25px; /* مرفوعة فوق الشريط الإخباري بشكل ثابت */
+    left: 0; right: 0; z-index: 3;
+    display: flex; flex-direction: column; align-items: flex-start;
+}
+.tv-countdown-pill {
+    background: rgba(0, 75, 135, 0.9); border: 2px solid #fff; border-radius: 30px;
+    padding: 8px 25px; margin: 0 40px 0 0; display: flex; align-items: center; gap: 15px;
+    font-size: clamp(1rem, 1.5vw, 2rem); font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+.tv-countdown-pill i { color: #d4af37; }
+
+/* الشريط الإخباري السفلي (ممتد على كامل الشاشة بخلفية مقسومة لونين) */
+.tv-ticker-wrapper {
+    position: relative; 
+    width: 100vw; height: 7vh; flex-shrink: 0; 
+    /* خلفية مقسومة: 28% لون القائمة الجانبية، والباقي أسود شفاف */
+    background: linear-gradient(to right, #002b5e 28%, rgba(0,0,0,0.8) 28%);
+    color: #fff; border-top: 3px solid #d4af37; 
+    display: flex; align-items: center; z-index: 100;
+}
+.tv-ticker-wrapper marquee { font-size: 1.8vw; padding: 0 20px; }
