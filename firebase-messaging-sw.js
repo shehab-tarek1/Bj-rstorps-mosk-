@@ -12,15 +12,29 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// 1. الطريقة الرسمية من فايربيز
+// رابط Vercel الافتراضي لضمان العمل في مصر بدون حجب
+const DEFAULT_PRIMARY_URL = 'https://mosk-staden-perstorp.vercel.app/';
+
+// دالة ذكية لتحديد الرابط الديناميكي المناسب
+function getDynamicTargetUrl(customUrl) {
+  if (customUrl) return customUrl;
+  if (self.location && self.location.origin && self.location.origin !== 'null' && !self.location.origin.includes('localhost')) {
+    return self.location.origin;
+  }
+  return DEFAULT_PRIMARY_URL;
+}
+
+// 1. الطريقة الرسمية من فايربيز (Background Message Handler)
 messaging.setBackgroundMessageHandler(function(payload) {
   const notificationTitle = payload.notification?.title || 'مسجد الرحمن';
+  const targetUrl = getDynamicTargetUrl(payload.fcmOptions?.link || payload.data?.url);
+
   const notificationOptions = {
     body: payload.notification?.body || 'لديك إشعار جديد',
     icon: 'https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg',
     badge: 'https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg',
     vibrate: [200, 100, 200, 100, 200],
-    data: { url: 'https://perstorp-moske.netlify.app/' },
+    data: { url: targetUrl },
     requireInteraction: true // إجبار الإشعار على البقاء على الشاشة حتى يضغط عليه المستخدم
   };
   return self.registration.showNotification(notificationTitle, notificationOptions);
@@ -28,25 +42,34 @@ messaging.setBackgroundMessageHandler(function(payload) {
 
 // 2. التقاط جذري (Fallback) في حال كان المتصفح نائماً تماماً وتجاهل فايربيز
 self.addEventListener('push', function(event) {
-  // إذا لم يوقظ فايربيز المتصفح، هذه الدالة ستوقظه بقوة النظام
   if (event.data) {
-    const payload = event.data.json();
-    if (!payload.notification) { // لتجنب تكرار الإشعار
-      const title = payload.data?.title || 'مسجد الرحمن';
-      const options = {
-        body: payload.data?.body || 'لديك إشعار جديد',
-        icon: 'https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg',
-        badge: 'https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg',
-        vibrate: [200, 100, 200],
-        requireInteraction: true
-      };
-      event.waitUntil(self.registration.showNotification(title, options));
+    try {
+      const payload = event.data.json();
+      if (!payload.notification) { // لتجنب تكرار الإشعار
+        const title = payload.data?.title || 'مسجد الرحمن';
+        const targetUrl = getDynamicTargetUrl(payload.data?.url || payload.fcmOptions?.link);
+
+        const options = {
+          body: payload.data?.body || 'لديك إشعار جديد',
+          icon: 'https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg',
+          badge: 'https://res.cloudinary.com/db9h7zm1h/image/upload/w_500,q_auto,f_auto/v1774918203/hi5hebyjkpi3gkdgrdef.jpg',
+          vibrate: [200, 100, 200],
+          data: { url: targetUrl },
+          requireInteraction: true
+        };
+        event.waitUntil(self.registration.showNotification(title, options));
+      }
+    } catch (e) {
+      console.error('Error handling raw push payload:', e);
     }
   }
 });
 
+// التعامل مع الضغط على الإشعار
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
+  const clickUrl = event.notification.data?.url || getDynamicTargetUrl();
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(windowClients) {
       for (let i = 0; i < windowClients.length; i++) {
@@ -56,17 +79,15 @@ self.addEventListener('notificationclick', function(event) {
         }
       }
       if (clients.openWindow) {
-        return clients.openWindow('https://perstorp-moske.netlify.app/');
+        return clients.openWindow(clickUrl);
       }
     })
   );
 });
 
-// 3. نظام الكاش (Offline Mode) للحفاظ على التطبيق حياً
-// تم تغيير رقم الإصدار لضمان تحديث الكاش عند المستخدمين
-const CACHE_NAME = 'arrahman-v2.1'; 
+// 3. نظام الكاش (Offline Mode) المطور
+const CACHE_NAME = 'arrahman-v2.2'; 
 
-// تمت إضافة الملفات الجديدة التي قمنا بتقسيمها اليوم
 const ASSETS = [
   '/',
   '/index.html',
