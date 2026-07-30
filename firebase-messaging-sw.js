@@ -63,10 +63,16 @@ self.addEventListener('notificationclick', function(event) {
 });
 
 // 3. نظام الكاش (Offline Mode) للحفاظ على التطبيق حياً
-const CACHE_NAME = 'arrahman-v2.0';
+// تم تغيير رقم الإصدار لضمان تحديث الكاش عند المستخدمين
+const CACHE_NAME = 'arrahman-v2.1'; 
+
+// تمت إضافة الملفات الجديدة التي قمنا بتقسيمها اليوم
 const ASSETS = [
   '/',
   '/index.html',
+  '/style.css',
+  '/script.js',
+  '/tailwind.min.css',
   '/manifest.json',
   '/prayers.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
